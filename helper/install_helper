@@ -1,0 +1,15 @@
+#!/bin/sh
+
+helper_path=$1
+echo "Installing helper tools..."
+echo "Helper direcory is: ${1}"
+mkdir -p /Library/Application\ Support/Mellow
+cp $1/tun2socks /Library/Application\ Support/Mellow
+cp $1/route /Library/Application\ Support/Mellow
+cp $1/geosite.dat /Library/Application\ Support/Mellow
+cp $1/geoip.dat /Library/Application\ Support/Mellow
+chmod +s /Library/Application\ Support/Mellow/tun2socks
+chmod +s /Library/Application\ Support/Mellow/route
+
+echo "Helper tools installed."
+# ls -la /Library/Application\ Support/Mellow
