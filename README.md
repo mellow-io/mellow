@@ -11,3 +11,8 @@ yarn && yarn dist
 2. Edit your V2Ray config file ~/Library/Application\ Support/mellow/cfg.json
 3. Start from tray
 4. tail -f ~/Library/Logs/Mellow/log.log
+
+## TODO
+- [x] macOS Support
+- [ ] Windows Support
+- [ ] Linux Support
