@@ -1,0 +1,45 @@
+{
+  "name": "Mellow",
+  "version": "0.0.1",
+  "description": "Mellow",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+    "log": "tail -f ~/Library/Logs/Mellow/log.log"
+  },
+  "keywords": [
+    "Electron",
+    "quick",
+    "start",
+    "tutorial",
+    "demo"
+  ],
+  "author": "Mellow",
+  "devDependencies": {
+    "electron": "^5.0.2",
+    "electron-builder": "^20.41.0"
+  },
+  "dependencies": {
+    "default-gateway": "^5.0.2",
+    "electron-log": "^3.0.5",
+    "electron-reload": "^1.4.0",
+    "netmask": "^1.0.6",
+    "sudo-prompt": "^8.2.5"
+  },
+  "build": {
+    "appId": "your.id",
+    "mac": {
+      "category": "your.app.category.type",
+      "icon": "assets/icon.png",
+      "extraResources": [
+        "helper/tun2socks",
+        "helper/install_helper",
+        "helper/geosite.dat",
+        "helper/geoip.dat",
+        "helper/route"
+      ]
+    }
+  }
+}
