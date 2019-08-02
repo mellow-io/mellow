@@ -52,7 +52,8 @@ function startCore() {
     '-sendThrough', sendThrough,
     '-vconfig', path.join(app.getPath('userData'), 'cfg.json'),
     '-proxyType', 'v2ray',
-    '-fakeDns', '-loglevel', 'info', '-stats',
+    '-sniffingType', '""',
+    '-relayICMP', '-fakeDns', '-loglevel', 'info', '-stats',
     '-fakeDnsCacheDir', app.getPath('userData')
   ]
   tun2socks = spawn(supportCoreCmd, params)
