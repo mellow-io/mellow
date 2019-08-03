@@ -189,14 +189,11 @@ function findOriginalSendThrough() {
 
 function createTray() {
   tray = new Tray(path.join(__dirname, '/assets/tray-icon.png'))
-
-  startItem = { label: 'Start', type: 'normal', click: function() {
-      run()
-    }
-  }
-
   contextMenu = Menu.buildFromTemplate([
-    startItem,
+    { label: 'Start', type: 'normal', click: function() {
+        run()
+      }
+    },
     { label: 'Stop', type: 'normal', click: function() {
         stop()
       }
@@ -239,11 +236,11 @@ app.on('ready', init)
 app.on('window-all-closed', function () {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') app.quit()
+  // if (process.platform !== 'darwin') app.quit()
 })
 
 app.on('activate', function () {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) createWindow()
+  // if (mainWindow === null) createWindow()
 })
