@@ -37,7 +37,7 @@
         "helper/tun2socks",
         "helper/install_helper",
         "helper/geosite.dat",
-        "helper/geoip.dat",
+        "helper/geo.mmdb",
         "helper/route"
       ]
     }
