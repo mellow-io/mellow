@@ -6,6 +6,7 @@ const log = require('electron-log');
 const sudo = require('sudo-prompt')
 const defaultGateway = require('default-gateway');
 const os = require('os');
+const fs = require('fs');
 const Netmask = require('netmask').Netmask
 
 require('electron-reload')(__dirname)
@@ -15,8 +16,8 @@ let supportCoreCmd = path.join("/Library/Application Support/Mellow", 'tun2socks
 let tray = null
 let contextMenu = null
 let startItem = null
-let tun2socks = null
-let running = false
+let core = null
+let startInterrupt = false
 let origGw = null
 let origGwScope = null
 let sendThrough = null
@@ -44,31 +45,58 @@ function monitorPowerEvent() {
 }
 
 function startCore() {
-  log.info('Core started.')
+  startInterrupt = false
+  configFile = path.join(app.getPath('userData'), 'cfg.json')
+  try {
+    if (!fs.existsSync(configFile)) {
+      dialog.showErrorBox('Error', 'Can not find config file at ' + configFile)
+      return false
+    }
+  } catch(err) {
+    dialog.showErrorBox('Error', err)
+  }
   var params = [
     '-tunAddr', tunAddr,
     '-tunMask', tunMask,
     '-tunGw', tunGw,
     '-sendThrough', sendThrough,
-    '-vconfig', path.join(app.getPath('userData'), 'cfg.json'),
+    '-vconfig', configFile,
     '-proxyType', 'v2ray',
     '-sniffingType', '""',
     '-relayICMP', '-fakeDns', '-loglevel', 'info', '-stats',
     '-fakeDnsCacheDir', app.getPath('userData')
   ]
-  tun2socks = spawn(supportCoreCmd, params)
-  tun2socks.stdout.on('data', (data) => {
+  core = spawn(supportCoreCmd, params)
+  core.stdout.on('data', (data) => {
     log.info(data.toString());
   });
-  tun2socks.stderr.on('data', (data) => {
-    log.info(data.toString());
+  core.stderr.on('data', (data) => {
+    log.info(data.toString())
   });
-  tun2socks.on('close', (code, signal) => {
-    log.info('Core stopped.')
+  core.on('close', (code, signal) => {
+    log.info('Core stopped, code', code, 'signal' , signal)
+    if (code != 0) {
+      startInterrupt = true
+      core = null
+      dialog.showErrorBox('Error', 'Failed to start the Core, try reinstalling the helper, and see "~/Library/Logs/Mellow/log.log" for more details.', )
+    }
   })
+  core.on('error', (err) => {
+    log.info('Core errored.')
+    startInterrupt = true
+    core = null
+    dialog.showErrorBox('Error', 'Failed to start the Core, you may forget to install the helper.', )
+  })
+  log.info('Core started.')
+  return true
 }
 
 function configRoute() {
+  if (startInterrupt) {
+    log.info('Start interrupted.')
+    startInterrupt = false
+    return
+  }
   if (tunGw === null || origGw === null || origGwScope === null) {
     dialog.showErrorBox('Error', 'Failed to configure routig table: invalid args.')
     return
@@ -79,12 +107,10 @@ function configRoute() {
     execSync(supportRouteCmd + ' add default ' + tunGw)
     execSync(supportRouteCmd + ' add default ' + origGw + ' -ifscope ' + origGwScope)
   } catch (error) {
-    log.info('Failed to add default route:')
-    log.info(error.stdout)
-    log.info(error.stderr)
+    log.info(error.stdout.toString())
+    log.info(error.stderr.toString())
+    dialog.showErrorBox('Error', 'Failed to configure routes.')
   }
-  running = true
-  log.info('Running: ' + running)
 }
 
 function recoverRoute() {
@@ -95,33 +121,33 @@ function recoverRoute() {
       execSync(supportRouteCmd + ' delete default -ifscope ' + origGwScope)
       execSync(supportRouteCmd + ' add default ' + origGw)
     } catch (error) {
-      log.info('Failed to delete default route:')
       log.info(error.stdout)
       log.info(error.stderr)
+      dialog.showErrorBox('Error', 'Failed to configure routes.')
     }
-    running = false
-    log.info('Running: ' + running)
   } else {
     dialog.showErrorBox('Error', 'Failed to recover original network.')
   }
 }
 
 function stopCore() {
-  tun2socks.kill('SIGTERM')
-  tun2socks = null
+  core.kill('SIGTERM')
+  core = null
 }
 
 function run() {
   gw = getDefaultGateway()
   if (gw === null) {
-    // Stop running if the default gateway is missing.
+    // Stop if the default gateway is missing.
     dialog.showErrorBox('Error', 'Failed to find the default gateway.')
     stopCore()
     return
   } else if (tunAddrBlock.contains(gw['gateway'])) {
     // tunGw is already the default gateway.
-    if (tun2socks === null) {
-      startCore()
+    if (core === null) {
+      if (!startCore()) {
+        return
+      }
     }
     return
   } else {
@@ -138,8 +164,10 @@ function run() {
       sendThrough = null
       origGwScope = null
     }
-    if (tun2socks === null) {
-      startCore()
+    if (core === null) {
+      if (!startCore()) {
+        return
+      }
     }
     setTimeout(configRoute, 500)
   }
@@ -151,7 +179,7 @@ function stop() {
   if (gw !== null && tunAddrBlock.contains(gw['gateway'])) {
     recoverRoute()
   }
-  if (tun2socks) {
+  if (core) {
     stopCore()
   }
 }
@@ -206,7 +234,7 @@ function createTray() {
         sudo.exec(installHelper + ' "' + helperPath + '"', options, (err, out, stderr) => {
           if (err) {
             log.info(err)
-            log.info(stderr)
+            dialog.showErrorBox('Error', 'Failed to install helper: ' + err)
           }
           log.info(out)
         })
