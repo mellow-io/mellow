@@ -8,9 +8,17 @@ yarn && yarn dist
 
 ## Run
 1. Install the helper from tray
-2. Edit your V2Ray config file ~/Library/Application\ Support/mellow/cfg.json
+2. Edit your V2Ray config file ~/Library/Application\ Support/Mellow/cfg.json
 3. Start from tray
-4. tail -f ~/Library/Logs/Mellow/log.log
+
+## Troubleshooting
+Check the log:
+```sh
+tail -f ~/Library/Logs/Mellow/log.log
+```
+
+Show active connections:
+Open http://localhost:6001/stats/session/plain in your browser.
 
 ## TODO
 - [x] macOS Support
@@ -94,7 +102,12 @@ yarn && yarn dist
                 ],
                 "strategy": "latency",
                 "totalMeasures": 2,
-                "interval": 300
+                "interval": 300,
+                "delay": 1,
+                "timeout": 6,
+                "tolerance": 300,
+                "probeTarget": "tls:www.google.com:443",
+                "probeContent": "HEAD / HTTP/1.1\r\n\r\n"
             },
             {
                 "tag": "bt",
@@ -132,6 +145,16 @@ yarn && yarn dist
                 "balancerTag": "limited"
             },
             {
+                "app": [
+                    "ssh",
+                    "git",
+                    "brew",
+                    "Dropbox"
+                ],
+                "type": "field",
+                "balancerTag": "limited"
+            },
+            {
                 "type": "field",
                 "domain": [
                     "geosite:cn"
@@ -148,7 +171,9 @@ yarn && yarn dist
             },
             {
                 "type": "field",
-                "port": "1,1024-65535",
+                "app": [
+                    "aria2c"
+                ],
                 "balancerTag": "bt"
             },
             {
