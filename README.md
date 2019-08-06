@@ -33,6 +33,7 @@ rm -rf ~/Library/Application\ Support/Mellow
 ## A Sample Config
 <details><summary>cfg.json</summary>
 <p>
+
 ```json
 {
     "log": {
@@ -215,5 +216,6 @@ rm -rf ~/Library/Application\ Support/Mellow
     }
 }
 ```
+
 </p>
 </details>
