@@ -7,9 +7,8 @@ yarn && yarn dist
 ```
 
 ## Run
-1. Install the helper from tray
-2. Edit your V2Ray config file ~/Library/Application\ Support/Mellow/cfg.json
-3. Start from tray
+1. Put your V2Ray config file at `~/Library/Application\ Support/Mellow/cfg.json`
+2. Start from tray
 
 ## Troubleshooting
 Check the log:
@@ -17,8 +16,14 @@ Check the log:
 tail -f ~/Library/Logs/Mellow/log.log
 ```
 
-Show active connections:
-Open http://localhost:6001/stats/session/plain in your browser.
+Open http://localhost:6001/stats/session/plain in your browser to show active connections.
+
+## Uninstall
+```sh
+sudo rm -rf /Applications/Mellow.app
+sudo rm -rf /Library/Application\ Support/Mellow
+rm -rf ~/Library/Application\ Support/Mellow
+```
 
 ## TODO
 - [x] macOS Support
@@ -26,6 +31,8 @@ Open http://localhost:6001/stats/session/plain in your browser.
 - [ ] Linux Support
 
 ## A Sample Config
+<details><summary>cfg.json</summary>
+<p>
 ```json
 {
     "log": {
@@ -208,3 +215,5 @@ Open http://localhost:6001/stats/session/plain in your browser.
     }
 }
 ```
+</p>
+</details>

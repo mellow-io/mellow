@@ -38,7 +38,8 @@
         "helper/install_helper",
         "helper/geosite.dat",
         "helper/geo.mmdb",
-        "helper/route"
+        "helper/route",
+        "helper/md5sum"
       ]
     }
   }
