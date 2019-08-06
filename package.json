@@ -18,15 +18,15 @@
   ],
   "author": "Mellow",
   "devDependencies": {
-    "electron": "^5.0.2",
-    "electron-builder": "^20.41.0"
+    "electron": "^6.0.0",
+    "electron-builder": "^21.2.0"
   },
   "dependencies": {
     "default-gateway": "^5.0.2",
-    "electron-log": "^3.0.5",
-    "electron-reload": "^1.4.0",
+    "electron-log": "^3.0.7",
+    "electron-reload": "^1.5.0",
     "netmask": "^1.0.6",
-    "sudo-prompt": "^8.2.5"
+    "sudo-prompt": "^9.0.0"
   },
   "build": {
     "appId": "your.id",
