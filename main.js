@@ -7,12 +7,26 @@ const sudo = require('sudo-prompt')
 const defaultGateway = require('default-gateway');
 const os = require('os');
 const fs = require('fs');
+const util = require('util');
 const Netmask = require('netmask').Netmask
 
-require('electron-reload')(__dirname)
+// require('electron-reload')(__dirname)
 
-let supportRouteCmd = path.join("/Library/Application\\ Support/Mellow", 'route')
-let supportCoreCmd = path.join("/Library/Application Support/Mellow", 'tun2socks')
+let helperFiles = [
+  'geo.mmdb',
+  'geosite.dat',
+  'md5sum',
+  'route',
+  'tun2socks'
+]
+
+let helperResourcePath = path.join(process.resourcesPath, 'helper')
+let helperInstallPath = "/Library/Application Support/Mellow"
+
+let routeCmd = path.join(helperInstallPath, 'route')
+let coreCmd = path.join(helperInstallPath, 'tun2socks')
+let md5Cmd = path.join(helperInstallPath, 'md5sum')
+
 let tray = null
 let contextMenu = null
 let startItem = null
@@ -38,10 +52,36 @@ function monitorPowerEvent() {
   electron.powerMonitor.on('suspend', () => {
     log.info('Device suspended.')
   })
-  electron.powerMonitor.on('resume', () => {
+  electron.powerMonitor.on('resume', async () => {
     log.info('Device resumed.')
+    await delay(2000)
     run()
   })
+}
+
+function checkHelper() {
+  log.info('Checking helper files.')
+  for (let f of helperFiles) {
+    try {
+      resourceFile = path.join(helperResourcePath, f)
+      installedFile = path.join(helperInstallPath, f)
+      resourceSum = execSync(util.format('"%s" "%s"', md5Cmd, resourceFile))
+      installedSum = execSync(util.format('"%s" "%s"', md5Cmd, installedFile))
+      if (resourceSum.toString() != installedSum.toString()) {
+        log.info('md5 checksum not match:')
+        log.info(util.format('[%s "%s"] not match [%s "%s"]', resourceFile, resourceSum, installedFile, installedSum))
+        return false
+      }
+    } catch (err) {
+      if (err.status == 1) {
+        dialog.showErrorBox('Error', 'Failed checksum helper files, it seems md5 or awk command is missing.')
+      } else {
+        log.info(err)
+        return false
+      }
+    }
+  }
+  return true
 }
 
 function startCore() {
@@ -49,7 +89,7 @@ function startCore() {
   configFile = path.join(app.getPath('userData'), 'cfg.json')
   try {
     if (!fs.existsSync(configFile)) {
-      dialog.showErrorBox('Error', 'Can not find config file at ' + configFile)
+      dialog.showErrorBox('Error', 'Can not find V2Ray config file at ' + configFile, ', if the file does not exist, you must create one, and note the file location is fixed.')
       return false
     }
   } catch(err) {
@@ -66,7 +106,7 @@ function startCore() {
     '-relayICMP', '-fakeDns', '-loglevel', 'info', '-stats',
     '-fakeDnsCacheDir', app.getPath('userData')
   ]
-  core = spawn(supportCoreCmd, params)
+  core = spawn(coreCmd, params)
   core.stdout.on('data', (data) => {
     log.info(data.toString());
   });
@@ -78,14 +118,14 @@ function startCore() {
     if (code != 0) {
       startInterrupt = true
       core = null
-      dialog.showErrorBox('Error', 'Failed to start the Core, try reinstalling the helper, and see "~/Library/Logs/Mellow/log.log" for more details.', )
+      dialog.showErrorBox('Error', 'Failed to start the Core, see "~/Library/Logs/Mellow/log.log" for more details.', )
     }
   })
   core.on('error', (err) => {
     log.info('Core errored.')
     startInterrupt = true
     core = null
-    dialog.showErrorBox('Error', 'Failed to start the Core, you may forget to install the helper.', )
+    dialog.showErrorBox('Error', 'Failed to start the Core, see "~/Library/Logs/Mellow/log.log" for more details.', )
   })
   log.info('Core started.')
   return true
@@ -98,14 +138,14 @@ function configRoute() {
     return
   }
   if (tunGw === null || origGw === null || origGwScope === null) {
-    dialog.showErrorBox('Error', 'Failed to configure routig table: invalid args.')
+    dialog.showErrorBox('Warning', 'Unable to configure the routing table for the moment, please try to start the app from tray manually, if that does not work, try restarting the app.')
     return
   }
   log.info('Set ' + tunGw + ' as the default gateway.')
   try {
-    execSync(supportRouteCmd + ' delete default')
-    execSync(supportRouteCmd + ' add default ' + tunGw)
-    execSync(supportRouteCmd + ' add default ' + origGw + ' -ifscope ' + origGwScope)
+    execSync(util.format('"%s" delete default', routeCmd))
+    execSync(util.format('"%s" add default %s', routeCmd, tunGw))
+    execSync(util.format('"%s" add default %s -ifscope %s', routeCmd, origGw, origGwScope))
   } catch (error) {
     log.info(error.stdout.toString())
     log.info(error.stderr.toString())
@@ -117,9 +157,9 @@ function recoverRoute() {
   if (origGw !== null) {
     log.info('Restore ' + origGw + ' as the default gateway.')
     try {
-      execSync(supportRouteCmd + ' delete default')
-      execSync(supportRouteCmd + ' delete default -ifscope ' + origGwScope)
-      execSync(supportRouteCmd + ' add default ' + origGw)
+      execSync(util.format('"%s" delete default', routeCmd))
+      execSync(util.format('"%s" delete default -ifscope %s', routeCmd, origGwScope))
+      execSync(util.format('"%s" add default %s', routeCmd, origGw))
     } catch (error) {
       log.info(error.stdout)
       log.info(error.stderr)
@@ -135,8 +175,26 @@ function stopCore() {
   core = null
 }
 
-function run() {
-  gw = getDefaultGateway()
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+async function run() {
+  if (!checkHelper()) {
+    success = await installHelper()
+    if (!success) {
+      return
+    }
+  }
+
+  gw = null
+  for (i = 0; i < 5; i++) {
+    gw = getDefaultGateway()
+    if (gw === null) {
+      await delay(1000)
+      log.info('Retrying to get the default gateway.')
+    }
+    break
+  }
+  log.info('Default gateway is', gw['gateway'])
   if (gw === null) {
     // Stop if the default gateway is missing.
     dialog.showErrorBox('Error', 'Failed to find the default gateway.')
@@ -154,7 +212,15 @@ function run() {
     // It should be the original gateway, remeber it.
     origGw = gw['gateway']
     log.info('Original gateway is ' + origGw)
-    st = findOriginalSendThrough()
+    st = null
+    for (i = 0; i < 5; i++) {
+      st = findOriginalSendThrough()
+      if (gw === null) {
+        await delay(1000)
+        log.info('Retrying to find the original send through address.')
+      }
+      break
+    }
     if (st !== null) {
       log.info('Original send through ' + st['address'] + ' ' + st['interface'])
       sendThrough = st['address']
@@ -215,6 +281,33 @@ function findOriginalSendThrough() {
   return null
 }
 
+async function sudoExecSync(cmd) {
+  return new Promise((resolve, reject) => {
+    var options = { name: 'Mellow' }
+    sudo.exec(cmd, options, (err, out, stderr) => {
+      if (err) {
+        reject(err)
+      }
+      resolve(out)
+    })
+  })
+}
+
+async function installHelper() {
+  log.info('Installing helper.')
+  var installer = path.join(helperResourcePath, 'install_helper')
+  cmd = util.format('"%s" "%s" "%s"', installer, helperResourcePath, helperInstallPath)
+  log.info('Executing:', cmd)
+  try {
+    await sudoExecSync(cmd)
+    log.info('Helper installed.')
+    return true
+  } catch (err) {
+    dialog.showErrorBox('Error', 'Failed to install helper: ' + err)
+    return false
+  }
+}
+
 function createTray() {
   tray = new Tray(path.join(__dirname, '/assets/tray-icon.png'))
   contextMenu = Menu.buildFromTemplate([
@@ -224,20 +317,6 @@ function createTray() {
     },
     { label: 'Stop', type: 'normal', click: function() {
         stop()
-      }
-    },
-    { label: 'Install Helper', type: 'normal', click: function() {
-        var options = { name: 'Mellow' }
-        var helperPath = path.join(process.resourcesPath, 'helper')
-        var installHelper = path.join(helperPath, 'install_helper')
-        log.info('Executing: ' + installHelper)
-        sudo.exec(installHelper + ' "' + helperPath + '"', options, (err, out, stderr) => {
-          if (err) {
-            log.info(err)
-            dialog.showErrorBox('Error', 'Failed to install helper: ' + err)
-          }
-          log.info(out)
-        })
       }
     },
     { label: 'Quit', type: 'normal', click: function() {
