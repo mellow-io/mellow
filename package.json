@@ -1,6 +1,6 @@
 {
   "name": "Mellow",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Mellow",
   "main": "main.js",
   "scripts": {
@@ -10,11 +10,7 @@
     "log": "tail -f ~/Library/Logs/Mellow/log.log"
   },
   "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
+    "proxy"
   ],
   "author": "Mellow",
   "devDependencies": {
