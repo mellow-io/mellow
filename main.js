@@ -9,6 +9,7 @@ const os = require('os');
 const fs = require('fs');
 const util = require('util');
 const Netmask = require('netmask').Netmask
+const open = require('open')
 
 // require('electron-reload')(__dirname)
 
@@ -325,6 +326,16 @@ function createTray() {
         stop()
       }
     },
+    { type: 'separator' },
+    { label: 'Statistics', type: 'normal', click: function() {
+        if (core === null) {
+          dialog.showMessageBox({message: 'Proxy is not running.'})
+        } else {
+          open('http://localhost:6001/stats/session/plain')
+        }
+      }
+    },
+    { type: 'separator' },
     { label: 'Quit', type: 'normal', click: function() {
         stop()
         app.quit()
