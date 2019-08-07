@@ -118,6 +118,7 @@ function startCore() {
     if (code != 0) {
       startInterrupt = true
       core = null
+      tray.setImage(path.join(__dirname, 'assets/tray-off-icon.png'))
       dialog.showErrorBox('Error', 'Failed to start the Core, see "~/Library/Logs/Mellow/log.log" for more details.', )
     }
   })
@@ -125,9 +126,11 @@ function startCore() {
     log.info('Core errored.')
     startInterrupt = true
     core = null
+    tray.setImage(path.join(__dirname, 'assets/tray-off-icon.png'))
     dialog.showErrorBox('Error', 'Failed to start the Core, see "~/Library/Logs/Mellow/log.log" for more details.', )
   })
   log.info('Core started.')
+  tray.setImage(path.join(__dirname, 'assets/tray-on-icon.png'))
   return true
 }
 
@@ -138,7 +141,7 @@ function configRoute() {
     return
   }
   if (tunGw === null || origGw === null || origGwScope === null) {
-    dialog.showErrorBox('Warning', 'Unable to configure the routing table for the moment, please try to start the app from tray manually, if that does not work, try restarting the app.')
+    dialog.showErrorBox('Warning', 'Unable to configure the routing table for the moment, please try to start the proxy from tray manually. If that does not work, try restarting the app.')
     return
   }
   log.info('Set ' + tunGw + ' as the default gateway.')
@@ -173,6 +176,7 @@ function recoverRoute() {
 function stopCore() {
   core.kill('SIGTERM')
   core = null
+  tray.setImage(path.join(__dirname, 'assets/tray-off-icon.png'))
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -191,6 +195,7 @@ async function run() {
     if (gw === null) {
       await delay(1000)
       log.info('Retrying to get the default gateway.')
+      continue
     }
     break
   }
@@ -215,9 +220,10 @@ async function run() {
     st = null
     for (i = 0; i < 5; i++) {
       st = findOriginalSendThrough()
-      if (gw === null) {
+      if (st === null) {
         await delay(1000)
         log.info('Retrying to find the original send through address.')
+        continue
       }
       break
     }
@@ -309,7 +315,7 @@ async function installHelper() {
 }
 
 function createTray() {
-  tray = new Tray(path.join(__dirname, '/assets/tray-icon.png'))
+  tray = new Tray(path.join(__dirname, 'assets/tray-off-icon.png'))
   contextMenu = Menu.buildFromTemplate([
     { label: 'Start', type: 'normal', click: function() {
         run()
@@ -329,25 +335,32 @@ function createTray() {
   tray.setContextMenu(contextMenu)
 }
 
+function monitorRunningStatus() {
+  setInterval(() => {
+    if (core !== null) {
+      gw = getDefaultGateway()
+      if (gw != null) {
+        if (tunAddrBlock.contains(gw['gateway'])) {
+          tray.setImage(path.join(__dirname, 'assets/tray-on-icon.png'))
+          return
+        } else {
+          tray.setImage(path.join(__dirname, 'assets/tray-off-icon.png'))
+
+          // Core is running, but the default route is not to TUN, try
+          // to reconfigure routes.
+          run()
+        }
+      }
+    } else {
+      tray.setImage(path.join(__dirname, 'assets/tray-off-icon.png'))
+    }
+  }, 5000)
+}
+
 function init() {
   createTray()
   monitorPowerEvent()
+  monitorRunningStatus()
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', init)
-
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  // if (process.platform !== 'darwin') app.quit()
-})
-
-app.on('activate', function () {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  // if (mainWindow === null) createWindow()
-})
