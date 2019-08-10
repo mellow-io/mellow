@@ -190,16 +190,19 @@ async function startCore(callback) {
     log.info(data.toString())
   })
   core.on('close', (code, signal) => {
+    log.info('Core stopped, code', code, 'signal' , signal)
+
     if (coreNeedResume) {
       // Change status and wait for the resume event callback to be called so the core will be restarted.
+      log.info('Core will restart upon device resume.')
       coreNeedResume = false
       core = null
       tray.setImage(trayOffIcon)
       return
     }
 
-    log.info('Core stopped, code', code, 'signal' , signal)
     if (code && code != 0) {
+      log.info('Core fails to startup, interrupt the starting procedure.')
       coreInterrupt = true
       core = null
       tray.setImage(trayOffIcon)
@@ -381,7 +384,7 @@ async function up() {
     // Routing seems ready, check if the core should restart.
     if (core === null) {
       startCore(null)
-      running = false
+      running = true
       return
     }
     return
@@ -415,8 +418,9 @@ async function up() {
     // if necessary.
     if (core === null) {
       startCore(configRoute)
-      running = false
-      return
+      running = true
+    } else {
+      configRoute()
     }
   }
 }
