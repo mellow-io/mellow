@@ -6,8 +6,8 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
-    "log": "tail -f ~/Library/Logs/Mellow/log.log"
+    "distmac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+    "distwin": "electron-builder"
   },
   "keywords": [
     "proxy"
@@ -18,7 +18,7 @@
     "electron-builder": "^21.2.0"
   },
   "dependencies": {
-    "default-gateway": "^5.0.2",
+    "default-gateway": "eycorsican/default-gateway#master",
     "electron-log": "^3.0.7",
     "electron-reload": "^1.5.0",
     "netmask": "^1.0.6",
@@ -26,17 +26,47 @@
     "sudo-prompt": "^9.0.0"
   },
   "build": {
-    "appId": "your.id",
+    "appId": "com.mellow.mellow",
     "mac": {
-      "category": "your.app.category.type",
       "icon": "assets/icon.png",
       "extraResources": [
-        "helper/tun2socks",
-        "helper/install_helper",
+        {
+          "from": "helper/darwin",
+          "to": "helper",
+          "filter": [
+            "core",
+            "install_helper",
+            "route",
+            "md5sum"
+          ]
+        },
         "helper/geosite.dat",
-        "helper/geo.mmdb",
-        "helper/route",
-        "helper/md5sum"
+        "helper/geo.mmdb"
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.png",
+      "extraResources": [
+        {
+          "from": "helper/win32",
+          "to": "helper",
+          "filter": [
+            "core.exe",
+            "ensure_tap_device.bat",
+            "config_route.bat",
+            "recover_route.bat",
+            "tap-windows6"
+          ]
+        },
+        {
+          "from": "helper/win32/tap-windows6",
+          "to": "helper/tap-windows6",
+          "filter": [
+            "*"
+          ]
+        },
+        "helper/geosite.dat",
+        "helper/geo.mmdb"
       ]
     }
   }

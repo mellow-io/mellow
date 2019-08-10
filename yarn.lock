@@ -480,10 +480,9 @@ deep-extend@^0.6.0:
   resolved "https://registry.npm.taobao.org/deep-extend/download/deep-extend-0.6.0.tgz#c4fa7c95404a17a9c3e8ca7e1537312b736330ac"
   integrity sha1-xPp8lUBKF6nD6Mp+FTcxK3NjMKw=
 
-default-gateway@^5.0.2:
+default-gateway@eycorsican/default-gateway#master:
   version "5.0.2"
-  resolved "https://registry.npm.taobao.org/default-gateway/download/default-gateway-5.0.2.tgz#d2d8a13d6fee406d9365d19ec9adccb8a60b82b3"
-  integrity sha1-0tihPW/uQG2TZdGeya3MuKYLgrM=
+  resolved "https://codeload.github.com/eycorsican/default-gateway/tar.gz/ac262a9ccf45adcdaf38ce18e37b0250247cbd23"
   dependencies:
     execa "^1.0.0"
     ip-regex "^2.1.0"

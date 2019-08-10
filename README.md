@@ -3,32 +3,79 @@ A V2Ray client with TUN support.
 
 ## Build
 ```sh
-yarn && yarn dist
+# macOS
+yarn && yarn distmac
+
+# Windows
+yarn && yarn distwin
 ```
 
 ## Run
-1. Put your V2Ray config file at `~/Library/Application\ Support/Mellow/cfg.json`
-2. Start from tray
-
-## Troubleshooting
-Check the log:
-```sh
-tail -f ~/Library/Logs/Mellow/log.log
-```
-
-Open http://localhost:6001/stats/session/plain in your browser to show active connections.
+1. Create a V2Ray config file named `cfg.json` in the `Config` folder.
+2. Start
 
 ## Uninstall
+
+### macOS
 ```sh
 sudo rm -rf /Applications/Mellow.app
 sudo rm -rf /Library/Application\ Support/Mellow
 rm -rf ~/Library/Application\ Support/Mellow
 ```
 
+### Windows
+Uninstall from the Control Panel.
+
 ## TODO
 - [x] macOS Support
-- [ ] Windows Support
+- [x] Windows Support
 - [ ] Linux Support
+
+## Additional Features
+
+### Latency Balancing
+Select the best server automatically, measured by proxy request RTT.
+
+```json
+"routing": {
+    "balancers": [
+        {
+            "tag": "server_lb",
+            "selector": [
+                "server_1",
+                "server_2"
+            ],
+            "strategy": "latency",
+            "totalMeasures": 2,
+            "interval": 300,
+            "delay": 1,
+            "timeout": 6,
+            "tolerance": 300,
+            "probeTarget": "tls:www.google.com:443",
+            "probeContent": "HEAD / HTTP/1.1\r\n\r\n"
+        }
+    ]
+}
+```
+
+### Application Matcher
+Support wildcard characters `*` and `?`.
+
+```json
+"routing": {
+    "rules": [
+        {
+            "app": [
+                "git",
+                "brew",
+                "Dropbox"
+            ],
+            "type": "field",
+            "outboundTag": "proxy"
+        }
+    ]
+}
+```
 
 ## A Sample Config
 <details><summary>cfg.json</summary>

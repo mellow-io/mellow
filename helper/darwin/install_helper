@@ -1,0 +1,11 @@
+#!/bin/sh
+
+mkdir -p "$2"
+cp "$1/core" "$2"
+cp "$1/route" "$2"
+cp "$1/geosite.dat" "$2"
+cp "$1/geo.mmdb" "$2"
+cp "$1/md5sum" "$2"
+chmod +s "$2/core"
+chmod +s "$2/route"
+chmod +s "$2/md5sum"
