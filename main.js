@@ -45,6 +45,7 @@ let tunName = 'mellow-tap0'
 let tunAddr = '10.255.0.2'
 let tunMask = '255.255.255.0'
 let tunGw = '10.255.0.1'
+let loglevel = 'info'
 var tunAddrBlock = new Netmask(tunAddr, tunMask)
 
 var trayOnIcon
@@ -155,7 +156,7 @@ async function startCore(callback) {
         '-sniffingType', 'x',
         '-relayICMP',
         '-fakeDns',
-        '-loglevel', 'info',
+        '-loglevel', loglevel,
         '-stats',
         '-fakeDnsCacheDir', app.getPath('userData')
       ]
@@ -173,10 +174,9 @@ async function startCore(callback) {
         '-rpcPort', coreRpcPort.toString(),
         '-sendThrough', sendThrough,
         '-proxyType', 'v2ray',
-        '-sniffingType', 'x',
         '-fakeDns',
         '-stats',
-        '-loglevel', 'info',
+        '-loglevel', loglevel,
         '-vconfig', configFile,
         '-fakeDnsCacheDir', app.getPath('userData')
       ]
@@ -533,10 +533,6 @@ function createTray() {
         shell.openItem(app.getPath('userData'))
       }
     },
-    { label: 'Log', type: 'normal', click: function() {
-        shell.openItem(logPath)
-      }
-    },
     { label: 'Statistics', type: 'normal', click: function() {
         if (core === null) {
           dialog.showMessageBox({message: 'Proxy is not running.'})
@@ -544,6 +540,39 @@ function createTray() {
           open('http://localhost:6001/stats/session/plain')
         }
       }
+    },
+    { label: 'Log', type: 'normal', click: function() {
+        shell.openItem(logPath)
+      }
+    },
+    { label: 'Log Level', type: 'submenu', submenu: Menu.buildFromTemplate([
+        {
+          label: 'debug',
+          type: 'radio',
+          click: () => { loglevel = 'debug' }
+        },
+        {
+          label: 'info',
+          type: 'radio',
+          click: () => { loglevel = 'info' },
+          checked: true
+        },
+        {
+          label: 'warn',
+          type: 'radio',
+          click: () => { loglevel = 'warn' }
+        },
+        {
+          label: 'error',
+          type: 'radio',
+          click: () => { loglevel = 'error' }
+        },
+        {
+          label: 'none',
+          type: 'radio',
+          click: () => { loglevel = 'none' }
+        }
+      ])
     },
     { type: 'separator' },
     { label: 'Quit', type: 'normal', click: function() {
