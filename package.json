@@ -6,8 +6,8 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "distmac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
-    "distwin": "electron-builder"
+    "distmac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder -m",
+    "distwin": "electron-builder -w"
   },
   "keywords": [
     "proxy"
