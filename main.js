@@ -41,7 +41,17 @@ let coreInterrupt = false
 let origGw = null
 let origGwScope = null
 let sendThrough = null
-let tunName = 'mellow-tap0'
+
+var tunName
+switch (process.platform) {
+  case 'darwin':
+    tunName = 'utun233'
+    break
+  case 'win32':
+    tunName = 'mellow-tap0'
+    break
+}
+
 let tunAddr = '10.255.0.2'
 let tunMask = '255.255.255.0'
 let tunGw = '10.255.0.1'
@@ -147,6 +157,7 @@ async function startCore(callback) {
     case 'darwin':
       cmd = coreCmd
       params = [
+        '-tunName', tunName,
         '-tunAddr', tunAddr,
         '-tunMask', tunMask,
         '-tunGw', tunGw,
