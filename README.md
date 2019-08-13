@@ -1,5 +1,5 @@
 # Mellow
-A V2Ray client with TUN support.
+A V2Ray client that can handle all TCP/UDP/ICMP traffic with domain/IP/app rules.
 
 ## Build
 ```sh
@@ -9,10 +9,6 @@ yarn && yarn distmac
 # Windows
 yarn && yarn distwin
 ```
-
-## Run
-1. Create a V2Ray config file named `cfg.json` in the `Config` folder.
-2. Start
 
 ## Uninstall
 
