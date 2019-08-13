@@ -20,9 +20,7 @@
   "dependencies": {
     "default-gateway": "eycorsican/default-gateway#master",
     "electron-log": "^3.0.7",
-    "electron-reload": "^1.5.0",
     "netmask": "^1.0.6",
-    "open": "^6.4.0",
     "sudo-prompt": "^9.0.0"
   },
   "build": {

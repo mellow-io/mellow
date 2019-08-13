@@ -10,7 +10,6 @@ const fs = require('fs')
 const net = require('net')
 const util = require('util')
 const Netmask = require('netmask').Netmask
-const open = require('open')
 
 // require('electron-reload')(__dirname)
 
@@ -25,12 +24,73 @@ let helperFiles = [
 let helperResourcePath = path.join(process.resourcesPath, 'helper')
 let helperInstallPath = "/Library/Application Support/Mellow"
 let logPath = log.transports.file.findLogPath('Mellow')
+let configFolder = app.getPath('userData')
+let configFile = path.join(configFolder, 'cfg.json')
+let configTemplate = `{
+    "log": {
+        "loglevel": "warning"
+    },
+    "outbounds": [
+        {
+            "protocol": "vmess",
+            "settings": {
+                "vnext": [
+                    {
+                        "users": [
+                            {
+                                "id": "d2953280-9eb3-451d-aef6-283cd79ba62c",
+                                "alterId": 4
+                            }
+                        ],
+                        "address": "yourserver.com",
+                        "port": 10086
+                    }
+                ]
+            },
+            "tag": "proxy"
+        },
+        {
+            "protocol": "freedom",
+            "settings": {},
+            "tag": "direct"
+        }
+    ],
+    "routing": {
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+            {
+                "type": "field",
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "direct"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:cn",
+                    "geoip:private"
+                ],
+                "outboundTag": "direct"
+            },
+            {
+                "ip": [
+                    "0.0.0.0/0",
+                    "::/0"
+                ],
+                "type": "field",
+                "outboundTag": "proxy"
+            }
+        ]
+    }
+}`
 
 let routeCmd = path.join(helperInstallPath, 'route')
 let coreCmd = path.join(helperInstallPath, 'core')
 let md5Cmd = path.join(helperInstallPath, 'md5sum')
 
 let running = false
+let helperVerified = false
 let coreNeedResume = false
 let tray = null
 let contextMenu = null
@@ -128,11 +188,9 @@ function checkHelper() {
 async function startCore(callback) {
   coreInterrupt = false
 
-  configFile = path.join(app.getPath('userData'), 'cfg.json')
-
   try {
     if (!fs.existsSync(configFile)) {
-      dialog.showErrorBox('Error', util.format('Can not find V2Ray config file at %s, if the file does not exist, you must create one, and note the file location is fixed.', configFile))
+      dialog.showMessageBox({message: 'Config file not found.'})
       return
     }
   } catch(err) {
@@ -185,11 +243,9 @@ async function startCore(callback) {
         '-rpcPort', coreRpcPort.toString(),
         '-sendThrough', sendThrough,
         '-proxyType', 'v2ray',
-        '-fakeDns',
         '-stats',
         '-loglevel', loglevel,
-        '-vconfig', configFile,
-        '-fakeDnsCacheDir', app.getPath('userData')
+        '-vconfig', configFile
       ]
       break
   }
@@ -366,11 +422,14 @@ const delay = ms => new Promise(res => setTimeout(res, ms))
 
 async function up() {
   if (process.platform == "darwin") {
-    if (!checkHelper()) {
-      success = await installHelper()
-      if (!success) {
-        return
+    if (!helperVerified) {
+      if (!checkHelper()) {
+        success = await installHelper()
+        if (!success) {
+          return
+        }
       }
+      helperVerified = true
     }
   }
 
@@ -544,50 +603,83 @@ function createTray() {
       }
     },
     { type: 'separator' },
-    { label: 'Config', type: 'normal', click: function() {
-        shell.openItem(app.getPath('userData'))
-      }
+    { label: 'Config', type: 'submenu', submenu: Menu.buildFromTemplate([
+        { label: 'Edit', type: 'normal', click: function() {
+            try {
+              if (!fs.existsSync(configFile)) {
+                if (!fs.existsSync(configFolder)) {
+                  fs.mkdirSync(configFolder, { recursive: true })
+                }
+                fd = fs.openSync(configFile, 'w')
+                fs.writeSync(fd, configTemplate)
+                fs.closeSync(fd)
+              }
+            } catch (err) {
+              dialog.showErrorBox('Error', 'Failed to create file/folder: ' + err)
+            }
+            shell.openItem(configFile)
+          }
+        },
+        {
+          label: 'Open Folder',
+          type: 'normal',
+          click: () => { shell.openItem(configFolder) }
+        },
+      ])
     },
+    { type: 'separator' },
     { label: 'Statistics', type: 'normal', click: function() {
         if (core === null) {
           dialog.showMessageBox({message: 'Proxy is not running.'})
         } else {
-          open('http://localhost:6001/stats/session/plain')
+          shell.openExternal('http://localhost:6001/stats/session/plain')
         }
       }
     },
-    { label: 'Log', type: 'normal', click: function() {
-        shell.openItem(logPath)
-      }
-    },
-    { label: 'Log Level', type: 'submenu', submenu: Menu.buildFromTemplate([
+    { label: 'Log', type: 'submenu', submenu: Menu.buildFromTemplate([
         {
-          label: 'debug',
-          type: 'radio',
-          click: () => { loglevel = 'debug' }
+          label: 'Open',
+          type: 'normal',
+          click: () => { shell.openItem(logPath) }
         },
         {
-          label: 'info',
-          type: 'radio',
-          click: () => { loglevel = 'info' },
-          checked: true
-        },
-        {
-          label: 'warn',
-          type: 'radio',
-          click: () => { loglevel = 'warn' }
-        },
-        {
-          label: 'error',
-          type: 'radio',
-          click: () => { loglevel = 'error' }
-        },
-        {
-          label: 'none',
-          type: 'radio',
-          click: () => { loglevel = 'none' }
+          label: 'Level',
+          type: 'submenu',
+          submenu: Menu.buildFromTemplate([
+            {
+              label: 'debug',
+              type: 'radio',
+              click: () => { loglevel = 'debug' }
+            },
+            {
+              label: 'info',
+              type: 'radio',
+              click: () => { loglevel = 'info' },
+              checked: true
+            },
+            {
+              label: 'warn',
+              type: 'radio',
+              click: () => { loglevel = 'warn' }
+            },
+            {
+              label: 'error',
+              type: 'radio',
+              click: () => { loglevel = 'error' }
+            },
+            {
+              label: 'none',
+              type: 'radio',
+              click: () => { loglevel = 'none' }
+            }
+          ])
         }
       ])
+    },
+    { type: 'separator' },
+    { label: 'About', type: 'normal', click: function() {
+        dialog.showMessageBox({ message: util.format('Mellow (v%s)', app.getVersion()) })
+      }
     },
     { type: 'separator' },
     { label: 'Quit', type: 'normal', click: function() {
