@@ -222,7 +222,6 @@ async function startCore(callback) {
         '-sendThrough', sendThrough,
         '-vconfig', configFile,
         '-proxyType', 'v2ray',
-        '-sniffingType', 'none',
         '-relayICMP',
         '-fakeDns',
         '-loglevel', loglevel,
