@@ -33,6 +33,7 @@ deploy:
   file:
     - "dist/Mellow Setup*.exe"
     - "dist/Mellow*.dmg"
+  overwrite: true
   skip_cleanup: true
   on:
     tags: true

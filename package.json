@@ -1,6 +1,6 @@
 {
   "name": "Mellow",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Mellow",
   "main": "main.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "electron-builder": "^21.2.0"
   },
   "dependencies": {
-    "default-gateway": "silverwind/default-gateway#master",
+    "default-gateway": "^5.0.3",
     "electron-log": "^3.0.7",
     "netmask": "^1.0.6",
     "sudo-prompt": "^9.0.0"
