@@ -1,37 +1,7 @@
 # Mellow
-一个基于规则进行透明代理的 V2Ray 客户端，支持 Windows 和 macOS。
+A V2Ray client that can handle all TCP/UDP/ICMP traffic with domain/IP/app rules.
 
-## 下载
-
-https://github.com/eycorsican/Mellow/releases
-
-## 特性
-Mellow 可对所有应用、所有请求进行透明代理，不需要为每个应用或程序单独设置代理，它所支持的特性可以概括为：
-
-|     | [Mellow](https://github.com/eycorsican/Mellow) | [Surge Mac](https://nssurge.com/) | [SSTap](https://www.sockscap64.com/sstap-enjoy-gaming-enjoy-sstap/) | [Proxifier](https://www.proxifier.com/) | [Outline](https://getoutline.org/) |
-|:---:|:------:|:---------:|:-----:|:---------:|:-------:|
-| 透明代理 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| TCP 代理 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| UDP 代理 | ✅ | ✅ | ✅ | | ✅ |
-| IP 规则 | ✅ | ✅ | ✅ | ✅ |
-| 域名规则 | ✅ | ✅ | | ✅ |
-| 应用进程规则 | ✅ | ✅ | | ✅ |
-| 端口规则 | ✅ | ✅ | | ✅ |
-| MitM | | ✅ | | |
-| URL Rewrite | | ✅ | | |
-| 多个代理出口 | ✅ | ✅ | | ✅ |
-| 负载均衡 | ✅ | ✅ | | |
-| DNS 分流 | ✅ | ✅ | | |
-| SOCKS | ✅ | ✅ | ✅ | ✅ |
-| Shadowsocks | ✅ | ✅ | ✅ | | ✅ |
-| VMess | ✅ | | | |
-| WebSocket, mKCP, QUIC, HTTP/2 传输| ✅ | | | |
-| Windows 支持 | ✅ | | ✅ | ✅ | ✅ |
-| macOS 支持 | ✅ | ✅ | | ✅ | ✅ |
-
-其它 V2Ray 所支持的功能也都是支持的，上面并没有全部列出。
-
-## 构建
+## Build
 ```sh
 # macOS
 yarn && yarn distmac
@@ -40,10 +10,27 @@ yarn && yarn distmac
 yarn && yarn distwin
 ```
 
-## 扩展功能配置方式
+## Uninstall
 
-### 自动选择最优线路
-可根据代理请求的 RTT，自动选择负载均衡组中最优线路来转发请求。
+### macOS
+```sh
+sudo rm -rf /Applications/Mellow.app
+sudo rm -rf /Library/Application\ Support/Mellow
+rm -rf ~/Library/Application\ Support/Mellow
+```
+
+### Windows
+Uninstall from the Control Panel.
+
+## TODO
+- [x] macOS Support
+- [x] Windows Support
+- [ ] Linux Support
+
+## Additional Features
+
+### Latency Balancing
+Select the best server automatically, measured by proxy request RTT.
 
 ```json
 "routing": {
@@ -67,21 +54,17 @@ yarn && yarn distwin
 }
 ```
 
-
-## 应用进程规则
-支持 `*` 和 `?` 通配符匹配，匹配内容为进程名称。
-
-在 Windows 上，进程名称通常为 `xxx.exe`，例如 `chrome.exe`，在 Mellow 的 `Statistics` 中可方便查看。
-
-在 macOS 上也可以通过 Mellow 的 `Statistics` 查看，也可以通过 `ps` 命令查看进程。
+### Application Matcher
+Support wildcard characters `*` and `?`.
 
 ```json
 "routing": {
     "rules": [
         {
             "app": [
-                "git*",
-                "chrome.exe"
+                "git",
+                "brew",
+                "Dropbox"
             ],
             "type": "field",
             "outboundTag": "proxy"
@@ -90,7 +73,7 @@ yarn && yarn distwin
 }
 ```
 
-## 配置示例
+## A Sample Config
 <details><summary>cfg.json</summary>
 <p>
 
