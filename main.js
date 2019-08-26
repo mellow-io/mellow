@@ -51,13 +51,37 @@ let configTemplate = `{
         },
         {
             "protocol": "freedom",
-            "settings": {},
+            "settings": {
+              "domainStrategy": "UseIP"
+            },
             "tag": "direct"
         }
     ],
+    "dns": {
+        "servers": [
+            {
+                "address": "8.8.8.8",
+                "port": 53
+            },
+            {
+                "address": "223.5.5.5",
+                "port": 53,
+                "domains": [
+                    "geosite:cn"
+                ]
+            }
+        ]
+    },
     "routing": {
         "domainStrategy": "IPIfNonMatch",
         "rules": [
+            {
+                "ip": [
+                    "8.8.8.8/32"
+                ],
+                "type": "field",
+                "outboundTag": "proxy"
+            }
             {
                 "type": "field",
                 "domain": [
