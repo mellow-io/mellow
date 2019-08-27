@@ -247,10 +247,8 @@ async function startCore(callback) {
         '-vconfig', configFile,
         '-proxyType', 'v2ray',
         '-relayICMP',
-        '-fakeDns',
         '-loglevel', loglevel,
-        '-stats',
-        '-fakeDnsCacheDir', app.getPath('userData')
+        '-stats'
       ]
       break
     case 'win32':
@@ -266,6 +264,7 @@ async function startCore(callback) {
         '-rpcPort', coreRpcPort.toString(),
         '-sendThrough', sendThrough,
         '-proxyType', 'v2ray',
+        '-relayICMP',
         '-stats',
         '-loglevel', loglevel,
         '-vconfig', configFile
