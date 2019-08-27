@@ -20,6 +20,7 @@
   "dependencies": {
     "default-gateway": "^5.0.3",
     "electron-log": "^3.0.7",
+    "electron-store": "^4.0.0",
     "netmask": "^1.0.6",
     "sudo-prompt": "^9.0.0"
   },
