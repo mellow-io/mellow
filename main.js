@@ -10,8 +10,21 @@ const fs = require('fs')
 const net = require('net')
 const util = require('util')
 const Netmask = require('netmask').Netmask
+const Store = require('electron-store')
 
 // require('electron-reload')(__dirname)
+
+const schema = {
+  enableFakeDns: {
+    type: 'boolean',
+    default: false
+  },
+  loglevel: {
+    type: 'string',
+    default: 'info'
+  }
+}
+const store = new Store({schema})
 
 let helperFiles = [
   'geo.mmdb',
@@ -139,7 +152,6 @@ switch (process.platform) {
 let tunAddr = '10.255.0.2'
 let tunMask = '255.255.255.0'
 let tunGw = '10.255.0.1'
-let loglevel = 'info'
 var tunAddrBlock = new Netmask(tunAddr, tunMask)
 
 var trayOnIcon
@@ -247,7 +259,7 @@ async function startCore(callback) {
         '-vconfig', configFile,
         '-proxyType', 'v2ray',
         '-relayICMP',
-        '-loglevel', loglevel,
+        '-loglevel', store.get('loglevel'),
         '-stats'
       ]
       break
@@ -266,10 +278,14 @@ async function startCore(callback) {
         '-proxyType', 'v2ray',
         '-relayICMP',
         '-stats',
-        '-loglevel', loglevel,
+        '-loglevel', store.get('loglevel'),
         '-vconfig', configFile
       ]
       break
+  }
+  if (store.get('enableFakeDns')) {
+    params.push('-fakeDns')
+    params.push('-fakeDnsCacheDir', app.getPath('userData'))
   }
   core = spawn(cmd, params)
   core.stdout.on('data', (data) => {
@@ -650,6 +666,55 @@ function createTray() {
       ])
     },
     { type: 'separator' },
+    {
+      label: 'Preferences',
+      type: 'submenu',
+      submenu: Menu.buildFromTemplate([
+        {
+          label: 'Fake DNS',
+          type: 'checkbox',
+          click: (item) => { store.set('enableFakeDns', item.checked) },
+          checked: store.get('enableFakeDns')
+        },
+        {
+          label: 'Log Level',
+          type: 'submenu',
+          submenu: Menu.buildFromTemplate([
+            {
+              label: 'debug',
+              type: 'radio',
+              click: () => { store.set('loglevel', 'debug') },
+              checked: store.get('loglevel') == 'debug'
+            },
+            {
+              label: 'info',
+              type: 'radio',
+              click: () => { store.set('loglevel', 'info') },
+              checked: store.get('loglevel') == 'info'
+            },
+            {
+              label: 'warn',
+              type: 'radio',
+              click: () => { store.set('loglevel', 'warn') },
+              checked: store.get('loglevel') == 'warn'
+            },
+            {
+              label: 'error',
+              type: 'radio',
+              click: () => { store.set('loglevel', 'error') },
+              checked: store.get('loglevel') == 'error'
+            },
+            {
+              label: 'none',
+              type: 'radio',
+              click: () => { store.set('loglevel', 'none') },
+              checked: store.get('loglevel') == 'none'
+            }
+          ])
+        }
+      ])
+    },
+    { type: 'separator' },
     { label: 'Statistics', type: 'normal', click: function() {
         if (core === null) {
           dialog.showMessageBox({message: 'Proxy is not running.'})
@@ -658,45 +723,10 @@ function createTray() {
         }
       }
     },
-    { label: 'Log', type: 'submenu', submenu: Menu.buildFromTemplate([
-        {
-          label: 'Open',
-          type: 'normal',
-          click: () => { shell.openItem(logPath) }
-        },
-        {
-          label: 'Level',
-          type: 'submenu',
-          submenu: Menu.buildFromTemplate([
-            {
-              label: 'debug',
-              type: 'radio',
-              click: () => { loglevel = 'debug' }
-            },
-            {
-              label: 'info',
-              type: 'radio',
-              click: () => { loglevel = 'info' },
-              checked: true
-            },
-            {
-              label: 'warn',
-              type: 'radio',
-              click: () => { loglevel = 'warn' }
-            },
-            {
-              label: 'error',
-              type: 'radio',
-              click: () => { loglevel = 'error' }
-            },
-            {
-              label: 'none',
-              type: 'radio',
-              click: () => { loglevel = 'none' }
-            }
-          ])
-        }
-      ])
+    {
+      label: 'Open Log',
+      type: 'normal',
+      click: () => { shell.openItem(logPath) }
     },
     { type: 'separator' },
     { label: 'About', type: 'normal', click: function() {
@@ -710,6 +740,7 @@ function createTray() {
       }
     }
   ])
+
   tray.setToolTip('Mellow')
   tray.setContextMenu(contextMenu)
 }
