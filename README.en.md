@@ -3,6 +3,9 @@ A V2Ray client that can handle all TCP/UDP/ICMP traffic with domain/IP/app rules
 
 ## Build
 ```sh
+# download Geo data
+yarn dlgeo
+
 # macOS
 yarn && yarn distmac
 

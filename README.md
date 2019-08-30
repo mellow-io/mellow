@@ -33,6 +33,9 @@ Mellow 可对所有应用、所有请求进行透明代理，不需要为每个�
 
 ## 构建
 ```sh
+# 下载依赖数据
+yarn dlgeo
+
 # macOS
 yarn && yarn distmac
 
