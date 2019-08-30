@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ ! -f `which md5sum` ]; then
+	exit 1
+fi
+if [ ! -f `which awk` ]; then
+	exit 1
+fi
+
+md5sum $1 | awk '{print $1}'

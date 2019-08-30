@@ -8,6 +8,7 @@
     "pack": "electron-builder --dir",
     "distmac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder -m",
     "distwin": "electron-builder -w",
+    "distlinux": "electron-builder -l",
     "dlgeo": "bash scripts/dl_mmdb.sh && bash scripts/dl_geosite.sh"
   },
   "keywords": [
@@ -36,8 +37,8 @@
           "filter": [
             "core",
             "install_helper",
-            "route",
-            "md5sum"
+            "md5sum",
+            "route"
           ]
         },
         "helper/geosite.dat",
@@ -63,6 +64,26 @@
           "to": "helper/tap-windows6",
           "filter": [
             "*"
+          ]
+        },
+        "helper/geosite.dat",
+        "helper/geo.mmdb"
+      ]
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png",
+      "extraResources": [
+        {
+          "from": "helper/linux",
+          "to": "helper",
+          "filter": [
+            "config_route",
+            "recover_route",
+            "core",
+            "install_helper",
+            "md5sum",
+            "ip"
           ]
         },
         "helper/geosite.dat",
