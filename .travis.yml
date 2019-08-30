@@ -20,6 +20,7 @@ install:
   - yarn
 
 script:
+  - yarn dlgeo
   - yarn distmac
   - USE_HARD_LINKS=false yarn distwin
   - ls -la dist
