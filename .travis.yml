@@ -8,11 +8,6 @@ os:
 
 osx_image: xcode9.3
 
-# addons:
-#   homebrew:
-#     packages:
-#     - yarn
-
 cache:
   yarn: true
 
@@ -23,6 +18,7 @@ script:
   - yarn dlgeo
   - yarn distmac
   - USE_HARD_LINKS=false yarn distwin
+  - yarn distlinux
   - ls -la dist
 
 deploy:
@@ -34,6 +30,7 @@ deploy:
   file:
     - "dist/Mellow Setup*.exe"
     - "dist/Mellow*.dmg"
+    - "dist/Mellow*.AppImage"
   overwrite: true
   skip_cleanup: true
   on:
