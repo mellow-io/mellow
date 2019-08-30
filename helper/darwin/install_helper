@@ -1,11 +1,20 @@
 #!/bin/sh
 
-mkdir -p "$2"
-cp "$1/core" "$2"
-cp "$1/route" "$2"
-cp "$1/geosite.dat" "$2"
-cp "$1/geo.mmdb" "$2"
-cp "$1/md5sum" "$2"
-chmod +s "$2/core"
-chmod +s "$2/route"
-chmod +s "$2/md5sum"
+RES_PATH=$1
+INSTALL_PATH=$2
+
+mkdir -p "$INSTALL_PATH"
+
+cp "$RES_PATH/geosite.dat" "$INSTALL_PATH"
+cp "$RES_PATH/geo.mmdb" "$INSTALL_PATH"
+cp "$RES_PATH/core" "$INSTALL_PATH"
+cp "$RES_PATH/md5sum" "$INSTALL_PATH"
+cp "$RES_PATH/route" "$INSTALL_PATH"
+
+chown root "$INSTALL_PATH/core"
+chown root "$INSTALL_PATH/md5sum"
+chown root "$INSTALL_PATH/route"
+
+chmod +s "$INSTALL_PATH/core"
+chmod +s "$INSTALL_PATH/md5sum"
+chmod +s "$INSTALL_PATH/route"
