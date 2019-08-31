@@ -137,16 +137,17 @@ let configTemplate = `{
     }
 }`
 
-let md5Cmd = path.join(helperInstallPath, 'md5sum')
-
-var routeCmd = path.join(helperInstallPath, 'route')
+var md5Cmd
+var routeCmd
 var coreCmd
 switch(process.platform) {
   case 'linux':
+    md5Cmd = path.join(helperInstallPath, 'md5sum')
     coreCmd = path.join(helperInstallPath, 'core')
     routeCmd = path.join(helperInstallPath, 'ip')
     break
   case 'darwin':
+    md5Cmd = path.join(helperInstallPath, 'md5sum')
     coreCmd = path.join(helperInstallPath, 'core')
     routeCmd = path.join(helperInstallPath, 'route')
     break
