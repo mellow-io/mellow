@@ -13,7 +13,7 @@ const Netmask = require('netmask').Netmask
 const Store = require('electron-store')
 
 const schema = {
-  enableFakeDns: {
+  autoStart: {
     type: 'boolean',
     default: false
   },
@@ -316,10 +316,6 @@ async function startCore(callback) {
         '-vconfig', configFile
       ]
       break
-  }
-  if (store.get('enableFakeDns')) {
-    params.push('-fakeDns')
-    params.push('-fakeDnsCacheDir', app.getPath('userData'))
   }
   core = spawn(coreCmd, params)
   core.stdout.on('data', (data) => {
@@ -731,10 +727,10 @@ function createTray() {
       type: 'submenu',
       submenu: Menu.buildFromTemplate([
         {
-          label: 'Fake DNS',
+          label: 'Auto Start',
           type: 'checkbox',
-          click: (item) => { store.set('enableFakeDns', item.checked) },
-          checked: store.get('enableFakeDns')
+          click: (item) => { store.set('autoStart', item.checked) },
+          checked: store.get('autoStart')
         },
         {
           label: 'Log Level',
@@ -817,6 +813,9 @@ function init() {
   createTray()
   monitorPowerEvent()
   monitorRunningStatus()
+  if (store.get('autoStart')) {
+    up()
+  }
 }
 
 app.on('ready', init)
