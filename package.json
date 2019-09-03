@@ -47,6 +47,7 @@
     },
     "win": {
       "icon": "assets/icon.png",
+      "requestedExecutionLevel": "requireAdministrator",
       "extraResources": [
         {
           "from": "helper/win32",
