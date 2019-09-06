@@ -11,9 +11,16 @@ const net = require('net')
 const util = require('util')
 const Netmask = require('netmask').Netmask
 const Store = require('electron-store')
+const AutoLaunch = require('auto-launch')
+
+const autoLauncher = new AutoLaunch({name: 'Mellow'})
 
 const schema = {
-  autoStart: {
+  autoLaunch: {
+    type: 'boolean',
+    default: false
+  },
+  autoConnect: {
     type: 'boolean',
     default: false
   },
@@ -23,6 +30,12 @@ const schema = {
   }
 }
 const store = new Store({name: 'preference', schema: schema})
+
+autoLauncher.isEnabled().then((isEnabled) => {
+  store.set('autoLaunch', isEnabled)
+}).catch((err) => {
+  dialog.showErrorBox('Error', 'Failed to check auto launcher status.')
+})
 
 let helperResourcePath = path.join(process.resourcesPath, 'helper')
 
@@ -688,11 +701,11 @@ async function installHelper() {
 function createTray() {
   tray = new Tray(trayOffIcon)
   contextMenu = Menu.buildFromTemplate([
-    { label: 'Start', type: 'normal', click: function() {
+    { label: 'Connect', type: 'normal', click: function() {
         up()
       }
     },
-    { label: 'Stop', type: 'normal', click: function() {
+    { label: 'Disconnect', type: 'normal', click: function() {
         down()
       }
     },
@@ -727,10 +740,23 @@ function createTray() {
       type: 'submenu',
       submenu: Menu.buildFromTemplate([
         {
-          label: 'Auto Start',
+          label: 'Auto Launch',
           type: 'checkbox',
-          click: (item) => { store.set('autoStart', item.checked) },
-          checked: store.get('autoStart')
+          click: (item) => {
+            if (item.checked) {
+              autoLauncher.enable()
+            } else {
+              autoLauncher.disable()
+            }
+            store.set('autoLaunch', item.checked)
+          },
+          checked: store.get('autoLaunch')
+        },
+        {
+          label: 'Auto Connect',
+          type: 'checkbox',
+          click: (item) => { store.set('autoConnect', item.checked) },
+          checked: store.get('autoConnect')
         },
         {
           label: 'Log Level',
@@ -813,7 +839,7 @@ function init() {
   createTray()
   monitorPowerEvent()
   monitorRunningStatus()
-  if (store.get('autoStart')) {
+  if (store.get('autoConnect')) {
     up()
   }
 }

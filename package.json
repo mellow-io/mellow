@@ -20,6 +20,7 @@
     "electron-builder": "^21.2.0"
   },
   "dependencies": {
+    "auto-launch": "^5.0.5",
     "default-gateway": "^5.0.3",
     "electron-log": "^3.0.7",
     "electron-store": "^4.0.0",
