@@ -32,21 +32,24 @@ Mellow 可对所有应用、所有请求进行透明代理，不需要为每个�
 
 其它 V2Ray 所支持的功能也都是支持的，上面并没有全部列出。
 
-## 构建
+## 开发运行和构建
 
-建议在 macOS 或者 Linux 上进行构建，如果想在 Windows 上构建，那可能需要手动下载一下依赖数据。
+建议在 macOS 或者 Linux 上进行开发或构建，如果想在 Windows 上开发，那可能需要手动下载一下依赖数据。
 
 ```sh
 # 下载依赖数据
 yarn dlgeo
 
-# macOS
+# 开发运行
+yarn start
+
+# 构建 macOS 安装文件
 yarn && yarn distmac
 
-# Windows
+# 构建 Windows 安装文件
 yarn && yarn distwin
 
-# Linux
+# 构建 Linux 安装文件
 yarn && yarn distlinux
 ```
 
@@ -138,22 +141,19 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
 目前没有任何计划做成 UI 配置的方式。
 
 ## 配置示例
-<details><summary>cfg.json</summary>
-<p>
-
 ```json
 {
     "log": {
-        "loglevel": "info"
+        "loglevel": "info"             // 日志等级
     },
     "dns": {
         "servers": [
             {
-                "address": "8.8.8.8",
+                "address": "8.8.8.8",      // 首选 DNS 服务器
                 "port": 53
             },
             {
-                "address": "223.5.5.5",
+                "address": "223.5.5.5",    // 备选 DNS 服务器，但如果查询域名匹配到 geosite:cn，则首选此服务器
                 "port": 53,
                 "domains": [
                     "geosite:cn"
@@ -165,47 +165,47 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
         {
             "protocol": "vmess",
             "settings": {},
-            "tag": "economic_vps_1"
+            "tag": "economic_vps_1"     // 一个便宜 VPS 服务器
         },
         {
             "protocol": "vmess",
             "settings": {},
-            "tag": "economic_vps_2"
+            "tag": "economic_vps_2"     // 第二个便宜 VPS 服务器
         },
         {
             "protocol": "vmess",
             "settings": {},
-            "tag": "bittorrent_vps_1"
+            "tag": "bittorrent_vps_1"   // 可以用作 BT 下载的服务器
         },
         {
             "protocol": "vmess",
             "settings": {},
-            "tag": "expensive_vps_1"
+            "tag": "expensive_vps_1"    // 很贵很快的服务器
         },
         {
-            "protocol": "freedom",
+            "protocol": "freedom",      // 直连出口
             "settings": {},
             "tag": "direct"
         },
         {
             "settings": {},
-            "protocol": "blackhole",
+            "protocol": "blackhole",    // 拦截出口
             "tag": "block"
         },
         {
-            "protocol": "dns",
+            "protocol": "dns",          // DNS 出口
             "tag": "dns_out"
         }
     ],
     "routing": {
-        "domainStrategy": "IPIfNonMatch",
+        "domainStrategy": "IPIfNonMatch",                // 没匹配任何域名规则的话，解析成 IP 再匹配一次
         "balancers": [
             {
-                "tag": "limited",
-                "selector": [
-                    "expensive_vps_1",
-                    "economic_vps_1"
-                ],
+                "tag": "limited",                        // 把一个很快的服务器和一个较慢的服务器组合起来，
+                "selector": [                            // 大部分时间会选用快的服务器，当快的服务器因
+                    "expensive_vps_1",                   // 某种原因不可访问时，就自动切换到较慢但可用的
+                    "economic_vps_1"                     // 另一个服务器，慢的服务器充当一个备用角色，当
+                ],                                       // 快的服务器恢复访问后，自动切换回去。
                 "strategy": "latency",
                 "totalMeasures": 2,
                 "interval": 300,
@@ -216,14 +216,14 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
                 "probeContent": "HEAD / HTTP/1.1\r\n\r\n"
             },
             {
-                "tag": "bt",
+                "tag": "bt",                             // 专门用来做 BT 下载的服务器
                 "selector": [
                     "bittorrent_vps_1"
                 ]
             },
             {
-                "tag": "nolimit",
-                "selector": [
+                "tag": "nolimit",                        // 把几个便宜的服务器组合起来，自动选其中最快的，
+                "selector": [                            // 专门用来看视频、浏览图片网站等流量较大的网站。
                     "economic_vps_1",
                     "economic_vps_2"
                 ],
@@ -237,7 +237,7 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
                 "inboundTag": ["tun2socks"],
                 "network": "udp",
                 "port": 53,
-                "outboundTag": "dns_out",
+                "outboundTag": "dns_out",                // 把 DNS 流量路由到 DNS 出口做 DNS 分流
                 "type": "field"
             },
             {
@@ -265,7 +265,7 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
                     "Dropbox"
                 ],
                 "type": "field",
-                "balancerTag": "limited"
+                "balancerTag": "limited"                 // 让一些开发类的工具走较快的服务器
             },
             {
                 "type": "field",
@@ -287,7 +287,7 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
                 "app": [
                     "aria2c"
                 ],
-                "balancerTag": "bt"
+                "balancerTag": "bt"                      // 让 BT 下载软件走 BT 下载的服务器
             },
             {
                 "type": "field",
@@ -296,18 +296,17 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
                     "dl.google.com",
                     "ytimg"
                 ],
-                "balancerTag": "nolimit"
+                "balancerTag": "nolimit"                 // 大流量视频网站走较慢但不限流量的服务器组
             },
             {
                 "type": "field",
                 "domain": [
                     "domain:youtube.com",
-                    "android",
                     "google",
                     "nyaa",
                     "git"
                 ],
-                "balancerTag": "limited"
+                "balancerTag": "limited"                 // 普通网页浏览走较快的服务器
             },
             {
                 "ip": [
@@ -315,12 +314,9 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
                     "::/0"
                 ],
                 "type": "field",
-                "balancerTag": "nolimit"
+                "balancerTag": "nolimit"                 // 不匹配任何规则则走较慢服务器组
             }
         ]
     }
 }
 ```
-
-</p>
-</details>
