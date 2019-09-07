@@ -37,7 +37,19 @@ autoLauncher.isEnabled().then((isEnabled) => {
   dialog.showErrorBox('Error', 'Failed to check auto launcher status.')
 })
 
-let helperResourcePath = path.join(process.resourcesPath, 'helper')
+var helperResourcePath
+if (app.isPackaged) {
+  helperResourcePath = path.join(process.resourcesPath, 'helper')
+} else {
+  helperResourcePath = path.join(path.join(__dirname, 'helper'), process.platform)
+  for (let f of ['geo.mmdb', 'geosite.dat']) {
+    src = path.join(path.join(__dirname, 'helper'), f)
+    dst = path.join(helperResourcePath, f)
+    if (!fs.existsSync(dst)) {
+      fs.copyFileSync(src, dst)
+    }
+  }
+}
 
 var helperInstallPath
 var helperFiles
