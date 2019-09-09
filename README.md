@@ -140,6 +140,13 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
 ### 关于 GUI
 目前没有任何计划做成 UI 配置的方式。
 
+## FAQ
+
+### 为什么在 Statistics 中有些请求显示进程名称为 `unknown process`？
+
+1. 某些 UDP 会话如果持续时间过短，则会无法获取其发送进程。
+2. 在 Windows 上，会看到较多的 `unknown process`，这是因为 Mellow 没有权限访问系统进程的信息，特别是 DNS 请求，因为发送 DNS 请求的通常是一个名为 svchost.exe 的系统进程。
+
 ## 配置示例
 ```json
 {
@@ -234,10 +241,10 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
         ],
         "rules": [
             {
-                "inboundTag": ["tun2socks"],
-                "network": "udp",
-                "port": 53,
-                "outboundTag": "dns_out",                // 把 DNS 流量路由到 DNS 出口做 DNS 分流
+                "inboundTag": ["tun2socks"],             // 把来自 tun2socks 的 DNS 流量路由到 DNS 出口做 DNS 分流，
+                "network": "udp",                        // 注意写上 inboundTag 为 tun2socks 是必要的，需要以此来
+                "port": 53,                              // 区分来自 tun2socks 或内建 DNS 的 DNS 流量，以防止产生环路。
+                "outboundTag": "dns_out",
                 "type": "field"
             },
             {
