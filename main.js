@@ -1,5 +1,5 @@
 const electron = require('electron')
-const { app, Menu, Tray, BrowserWindow, dialog, shell } = electron
+const { app, systemPreferences, Menu, Tray, BrowserWindow, dialog, shell } = electron
 const path = require('path')
 const { spawn, execSync } = require('child_process')
 const log = require('electron-log')
@@ -217,7 +217,11 @@ var trayOffIcon
 switch (process.platform) {
   case 'linux':
   case 'darwin':
-    trayOnIcon = path.join(__dirname, 'assets/tray-on-icon.png')
+    if (systemPreferences.isDarkMode()) {
+      trayOnIcon = path.join(__dirname, 'assets/tray-on-icon-light.png')
+    } else {
+      trayOnIcon = path.join(__dirname, 'assets/tray-on-icon.png')
+    }
     trayOffIcon = path.join(__dirname, 'assets/tray-off-icon.png')
     break
   case 'win32':
