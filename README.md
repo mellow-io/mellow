@@ -124,6 +124,8 @@ Windows 客户端在每次启动时都会弹框请求管理权限，如果不希
 ### 关于 DNS
 因为系统 DNS 很不好控制，推荐 Freedom Outbound 使用 UseIP 策略，再配置好内建 DNS 服务器，这样可以避免一些奇怪问题，也增加 DNS 缓存的利用效率。
 
+Force DNS over TCP 一般只用在代理服务器不支持 UDP 的情况（SOCKS/Shadowsocks），开启后 DNS 分流会失效。
+
 DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/%E6%BC%AB%E8%B0%88%E5%90%84%E7%A7%8D%E9%BB%91%E7%A7%91%E6%8A%80%E5%BC%8F-dns-%E6%8A%80%E6%9C%AF%E5%9C%A8%E4%BB%A3%E7%90%86%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8-62c50e58cbd0) 中介绍的没什么出入，默认使用 Sniffing 来处理 DNS 染污，可以的话建议再自行配置 DNS Outbound 来做 DNS 分流（下面示例中有个大概配置）。
 
 在什么情况下 Sniffing 不够用？当遇到非 TLS/HTTP 流量的情况，比如对于 QUIC 流量 Sniffing 就不起效；再比如 DNS 查询不返回 IP 的情况，应用程序就不会发出流量，也就没办法 Sniff。Google 的很多服务属于前者，Instagram 的一些请求属于后者。
@@ -147,7 +149,31 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
 1. 某些 UDP 会话如果持续时间过短，则会无法获取其发送进程。
 2. 在 Windows 上，会看到较多的 `unknown process`，这是因为 Mellow 没有权限访问系统进程的信息，特别是 DNS 请求，因为发送 DNS 请求的通常是一个名为 svchost.exe 的系统进程。
 
-## 配置示例
+## 单纯的 Shadowsocks 全局代理配置
+
+一般还需要更改系统 DNS 配置，并且代理服务器需要支持 UDP。如果代理服务器不支持 UDP，可以开启 Force DNS over TCP，这样的话需要 DNS 服务器支持 TCP。
+
+```json
+{
+    "outbounds": [
+        {
+            "protocol": "shadowsocks",
+            "settings": {
+                "servers": [
+                    {
+                        "method": "aes-256-cfb",
+                        "address": "yourserver.com",
+                        "password": "yourpassword",
+                        "port": 10086
+                    }
+                ]
+            }
+        }
+    ]
+}
+```
+
+## 复杂点带规则的配置（不完全）
 ```json
 {
     "log": {

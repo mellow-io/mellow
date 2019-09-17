@@ -24,6 +24,10 @@ const schema = {
     type: 'boolean',
     default: false
   },
+  dnsFallback: {
+    type: 'boolean',
+    default: false
+  },
   loglevel: {
     type: 'string',
     default: 'info'
@@ -346,6 +350,10 @@ async function startCore(callback) {
       ]
       break
   }
+  if (store.get('dnsFallback')) {
+    params.push('-dnsFallback')
+  }
+
   core = spawn(coreCmd, params)
   core.stdout.on('data', (data) => {
     log.info(data.toString())
@@ -775,6 +783,12 @@ function createTray() {
           checked: store.get('autoConnect')
         },
         {
+          label: 'Force DNS over TCP',
+          type: 'checkbox',
+          click: (item) => { store.set('dnsFallback', item.checked) },
+          checked: store.get('dnsFallback')
+        },
+        {
           label: 'Log Level',
           type: 'submenu',
           submenu: Menu.buildFromTemplate([
@@ -858,6 +872,7 @@ function init() {
   if (store.get('autoConnect')) {
     up()
   }
+  log.info(util.format('Mellow (%s) started.', app.getVersion()))
 }
 
 app.on('ready', init)
