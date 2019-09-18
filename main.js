@@ -35,11 +35,29 @@ const schema = {
 }
 const store = new Store({name: 'preference', schema: schema})
 
-autoLauncher.isEnabled().then((isEnabled) => {
-  store.set('autoLaunch', isEnabled)
-}).catch((err) => {
-  dialog.showErrorBox('Error', 'Failed to check auto launcher status.')
-})
+function resetAutoLaunch() {
+  if (store.get('autoLaunch')) {
+    autoLauncher.isEnabled().then((isEnabled) => {
+      if (!isEnabled) {
+        // Enabled in Mellow but found disabled in system preferences.
+        autoLauncher.enable()
+      }
+    }).catch((err) => {
+      dialog.showErrorBox('Error', 'Failed to check auto launcher status.')
+    })
+  } else {
+    autoLauncher.isEnabled().then((isEnabled) => {
+      if (isEnabled) {
+        // Disabled in Mellow but found enabled in system preferences.
+        autoLauncher.disable()
+      }
+    }).catch((err) => {
+      dialog.showErrorBox('Error', 'Failed to check auto launcher status.')
+    })
+  }
+}
+
+resetAutoLaunch()
 
 var helperResourcePath
 if (app.isPackaged) {
@@ -767,12 +785,8 @@ function createTray() {
           label: 'Auto Launch',
           type: 'checkbox',
           click: (item) => {
-            if (item.checked) {
-              autoLauncher.enable()
-            } else {
-              autoLauncher.disable()
-            }
             store.set('autoLaunch', item.checked)
+            resetAutoLaunch()
           },
           checked: store.get('autoLaunch')
         },
