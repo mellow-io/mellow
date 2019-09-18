@@ -81,7 +81,7 @@ yarn && yarn distlinux
 ```
 
 
-## 应用进程规则
+### 应用进程规则
 支持 `*` 和 `?` 通配符匹配，匹配内容为进程名称。
 
 在 Windows 上，进程名称通常为 `xxx.exe`，例如 `chrome.exe`，在 Mellow 的 `Statistics` 中可方便查看。
@@ -124,6 +124,8 @@ Windows 客户端在每次启动时都会弹框请求管理权限，如果不希
 ### 关于 DNS
 因为系统 DNS 很不好控制，推荐 Freedom Outbound 使用 UseIP 策略，再配置好内建 DNS 服务器，这样可以避免一些奇怪问题，也增加 DNS 缓存的利用效率。
 
+macOS 和 Linux 用户可能需要检查下系统 DNS 配置，勿用路由器网关地址作 DNS，否则 DNS 流量不经 Mellow 会导致一些 DNS 解析异常以及导致 DNS 分流完全失效。
+
 Force DNS over TCP 一般只用在代理服务器不支持 UDP 的情况（SOCKS/Shadowsocks），开启后 DNS 分流会失效。
 
 DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/%E6%BC%AB%E8%B0%88%E5%90%84%E7%A7%8D%E9%BB%91%E7%A7%91%E6%8A%80%E5%BC%8F-dns-%E6%8A%80%E6%9C%AF%E5%9C%A8%E4%BB%A3%E7%90%86%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8-62c50e58cbd0) 中介绍的没什么出入，默认使用 Sniffing 来处理 DNS 染污，可以的话建议再自行配置 DNS Outbound 来做 DNS 分流（下面示例中有个大概配置）。
@@ -138,6 +140,8 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
 
 ### 关于日志
 日志有两份，一份是 Mellow 的日志，一份是 V2Ray 的日志，V2Ray 日志如果输出到 stdout/stderr，那 V2Ray 的日志会被打印到 Mellow 的日志里。
+
+另打开 Statistics 页面可看到所有请求的详细信息，注意这个页面不会自动刷新。
 
 ### 关于 GUI
 目前没有任何计划做成 UI 配置的方式。
