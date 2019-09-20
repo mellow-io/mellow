@@ -504,6 +504,13 @@ dmg-builder@21.2.0:
     js-yaml "^3.13.1"
     sanitize-filename "^1.6.2"
 
+doc-ready@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.npm.taobao.org/doc-ready/download/doc-ready-1.0.4.tgz#37f5391969cff994303fdfef2e5d50357f8164d3"
+  integrity sha1-N/U5GWnP+ZQwP9/vLl1QNX+BZNM=
+  dependencies:
+    eventie "^1"
+
 dot-prop@^4.1.0:
   version "4.2.0"
   resolved "https://registry.npm.taobao.org/dot-prop/download/dot-prop-4.2.0.tgz#1f19e0c2e1aa0e32797c49799f2837ac6af69c57"
@@ -585,6 +592,13 @@ electron-log@^3.0.7:
   resolved "https://registry.npm.taobao.org/electron-log/download/electron-log-3.0.7.tgz#bfdba9489c84b1301d6067028fce2f4cb2f89d7f"
   integrity sha1-v9upSJyEsTAdYGcCj84vTLL4nX8=
 
+electron-prompt@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.npm.taobao.org/electron-prompt/download/electron-prompt-1.3.1.tgz#547dfa6daa68264249c689f0086fdfad6c9bf52b"
+  integrity sha1-VH36bapoJkJJxonwCG/frWyb9Ss=
+  dependencies:
+    doc-ready "^1.0.4"
+
 electron-publish@21.2.0:
   version "21.2.0"
   resolved "https://registry.npm.taobao.org/electron-publish/download/electron-publish-21.2.0.tgz#cc225cb46aa62e74b899f2f7299b396c9802387d"
@@ -653,6 +667,11 @@ esprima@^4.0.0:
   version "4.0.1"
   resolved "https://registry.npm.taobao.org/esprima/download/esprima-4.0.1.tgz#13b04cdb3e6c5d19df91ab6987a8695619b0aa71"
   integrity sha1-E7BM2z5sXRnfkatph6hpVhmwqnE=
+
+eventie@^1:
+  version "1.0.6"
+  resolved "https://registry.npm.taobao.org/eventie/download/eventie-1.0.6.tgz#d4ffc8b0c2b5e493c2aa1b22cbe918d3aee74437"
+  integrity sha1-1P/IsMK15JPCqhsiy+kY067nRDc=
 
 execa@^0.7.0:
   version "0.7.0"
