@@ -800,7 +800,7 @@ function createTray() {
                       return
                     }
                     var body = ''
-                    res.on('end', (data) => {
+                    res.on('data', (data) => {
                       body += data
                     })
                     res.on('end', () => {
