@@ -27,6 +27,10 @@ const schema = {
     type: 'boolean',
     default: false
   },
+  checkUpdates: {
+    type: 'boolean',
+    default: true
+  },
   dnsFallback: {
     type: 'boolean',
     default: false
@@ -758,6 +762,42 @@ function createConfigFileIfNotExists() {
   }
 }
 
+function checkForUpdates(silent) {
+  opt = {
+    headers: {
+      'User-Agent': 'Mellow'
+    }
+  }
+  https.get('https://api.github.com/repos/eycorsican/Mellow/releases/latest', opt, (res) => {
+    if (res.statusCode != 200) {
+      if (!silent) {
+        dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
+      }
+      return
+    }
+    var body = ''
+    res.on('data', (data) => {
+      body += data
+    })
+    res.on('end', () => {
+      obj = JSON.parse(body)
+      latestVer = semver.clean(obj['tag_name'])
+      ver = app.getVersion()
+      if (ver != latestVer) {
+        dialog.showMessageBox({ message: util.format('A new version (%s) is available.\n\nRelease Notes:\n%s\n\nDownload: %s', latestVer, obj['body'], obj['html_url']) })
+      } else {
+        if (!silent) {
+          dialog.showMessageBox({ message: 'You are up-to-date!' })
+        }
+      }
+    })
+  }).on('error', (err) => {
+    if (!silent) {
+      dialog.showErrorBox('Error', 'HTTP GET failed: ' + err)
+    }
+  })
+}
+
 function createTray() {
   tray = new Tray(trayOffIcon)
   contextMenu = Menu.buildFromTemplate([
@@ -856,6 +896,12 @@ function createTray() {
           checked: store.get('autoConnect')
         },
         {
+          label: 'Check Updates',
+          type: 'checkbox',
+          click: (item) => { store.set('checkUpdates', item.checked) },
+          checked: store.get('checkUpdates')
+        },
+        {
           label: 'Force DNS over TCP',
           type: 'checkbox',
           click: (item) => { store.set('dnsFallback', item.checked) },
@@ -915,33 +961,7 @@ function createTray() {
     },
     { type: 'separator' },
     { label: 'Check For Updates', type: 'normal', click: function() {
-        opt = {
-          headers: {
-            'User-Agent': 'Mellow'
-          }
-        }
-        https.get('https://api.github.com/repos/eycorsican/Mellow/releases/latest', opt, (res) => {
-          if (res.statusCode != 200) {
-            dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
-            return
-          }
-          var body = ''
-          res.on('data', (data) => {
-            body += data
-          })
-          res.on('end', () => {
-            obj = JSON.parse(body)
-            latestVer = semver.clean(obj['tag_name'])
-            ver = app.getVersion()
-            if (ver != latestVer) {
-              dialog.showMessageBox({ message: util.format('A new version %s is available, download from:\n\n', latestVer, obj['html_url']) })
-            } else {
-              dialog.showMessageBox({ message: 'You are up-to-date!' })
-            }
-          })
-        }).on('error', (err) => {
-          dialog.showErrorBox('Error', 'HTTP GET failed: ' + err)
-        })
+        checkForUpdates(false)
       }
     },
     { label: 'About', type: 'normal', click: function() {
@@ -976,6 +996,9 @@ function init() {
     up()
   }
   log.info(util.format('Mellow (%s) started.', app.getVersion()))
+  if (store.get('checkUpdates')) {
+    checkForUpdates(true)
+  }
 }
 
 app.on('ready', init)
