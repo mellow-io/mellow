@@ -157,6 +157,22 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
 
 可以的，只需要把 [这](https://github.com/eycorsican/Mellow/blob/master/helper/linux/core) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/eycorsican/Mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。
 
+### 可以用作网关吗？
+
+在 macOS 上，开启 Mellow 后，再开启 IP Forwarding 就行：
+
+```sh
+sudo sysctl -w net.inet.ip.forwarding=1
+```
+
+同样在 Linux 上，开启 IP Forwarding：
+
+```sh
+sudo sysctl -w net.ipv4.ip_forward=1
+```
+
+注意这种网关形式上有别于一般的路由器透明代理设置，这里的 “网关” 是局域网里另一台普通的局域网设备，它本身需要路由器作网关。
+
 ## 单纯的 Shadowsocks 全局代理配置
 
 一般还需要更改系统 DNS 配置，并且代理服务器需要支持 UDP。如果代理服务器不支持 UDP，可以开启 Force DNS over TCP，这样的话需要 DNS 服务器支持 TCP。
