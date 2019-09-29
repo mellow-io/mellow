@@ -1,5 +1,6 @@
 {
-  "name": "Mellow",
+  "name": "mellow",
+  "productName": "Mellow",
   "version": "0.1.1",
   "description": "Mellow",
   "main": "main.js",
