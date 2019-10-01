@@ -223,7 +223,7 @@ let startItem = null
 let core = null
 let coreRpcPort = 6002
 let coreInterrupt = false
-let tempGw = null
+let tempOrigGw = null
 let origGw = null
 let origGwScope = null
 let tempSendThrough = null
@@ -489,8 +489,8 @@ async function configRoute() {
       case 'darwin':
         execSync(util.format('"%s" delete default', routeCmd))
         execSync(util.format('"%s" add default %s', routeCmd, tunGw))
-        if (tempGw !== origGw) {
-          execSync(util.format('"%s" delete default %s -ifscope %s', routeCmd, tempGw, origGwScope))
+        if (tempOrigGw && tempOrigGw !== origGw) {
+          execSync(util.format('"%s" delete default %s -ifscope %s', routeCmd, tempOrigGw, origGwScope))
         }
         execSync(util.format('"%s" add default %s -ifscope %s', routeCmd, origGw, origGwScope))
         break
@@ -582,8 +582,8 @@ async function up() {
       break
   }
   // Store current variables for special handling when the network change
+  tempOrigGw = origGw
   tempSendThrough = sendThrough
-  tempGw = origGw
   gw = null
   for (i = 0; i < 5; i++) {
     gw = getDefaultGateway()
@@ -640,7 +640,7 @@ async function up() {
     if (core === null) {
       startCore(configRoute);
       running = true;
-    } else if (tempSendThrough != sendThrough) {
+    } else if (tempSendThrough !== sendThrough) {
       stopCore()
       startCore(configRoute);
       running = true;
