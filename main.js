@@ -809,6 +809,11 @@ function createTray() {
         down()
       }
     },
+    { label: 'Reconnect', type: 'normal', click: function() {
+        down()
+        up()
+      }
+    },
     { type: 'separator' },
     { label: 'Config', type: 'submenu', submenu: Menu.buildFromTemplate([
         { label: 'Edit', type: 'normal', click: function() {
@@ -834,7 +839,10 @@ function createTray() {
             })
             .then((r) => {
                 if (r) {
-                  https.get(r, (res) => {
+                  opt = {
+                    timeout: 15 * 1000
+                  }
+                  https.get(r, opt, (res) => {
                     if (res.statusCode != 200) {
                       dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
                       return
@@ -857,6 +865,9 @@ function createTray() {
 
                       store.set('configUrl', r)
                       dialog.showMessageBox({message: 'Success.'})
+                    })
+                    res.on('timeout', ()=> {
+                      dialog.showErrorBox('Error', 'HTTP GET timeout')
                     })
                   }).on('error', (err) => {
                     dialog.showErrorBox('Error', 'HTTP GET failed: ' + err)

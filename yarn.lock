@@ -1922,10 +1922,9 @@ strip-json-comments@~2.0.1:
   resolved "https://registry.npm.taobao.org/strip-json-comments/download/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
   integrity sha1-PFMZQukIwml8DsNEhYwobHygpgo=
 
-sudo-prompt@^9.0.0:
-  version "9.0.0"
-  resolved "https://registry.npm.taobao.org/sudo-prompt/download/sudo-prompt-9.0.0.tgz#eebedeee9fcd6f661324e6bb46335e3288e8dc8a"
-  integrity sha1-7r7e7p/Nb2YTJOa7RjNeMojo3Io=
+sudo-prompt@eycorsican/sudo-prompt:
+  version "9.0.1"
+  resolved "https://codeload.github.com/eycorsican/sudo-prompt/tar.gz/dd386c259472fba7d5e30f62d3a718d0cdb6198b"
 
 sumchecker@^2.0.2:
   version "2.0.2"
