@@ -1,6 +1,6 @@
 {
   "name": "Mellow",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Mellow",
   "main": "main.js",
   "scripts": {
@@ -27,7 +27,7 @@
     "electron-store": "^4.0.0",
     "netmask": "^1.0.6",
     "semver": "^6.3.0",
-    "sudo-prompt": "^9.0.0"
+    "sudo-prompt": "eycorsican/sudo-prompt"
   },
   "build": {
     "appId": "com.mellow.mellow",
