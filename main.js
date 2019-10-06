@@ -245,22 +245,55 @@ let tunMask = '255.255.255.0'
 let tunGw = '10.255.0.1'
 var tunAddrBlock = new Netmask(tunAddr, tunMask)
 
-var trayOnIcon
-var trayOffIcon
-switch (process.platform) {
-  case 'linux':
-  case 'darwin':
-    if (systemPreferences.isDarkMode()) {
-      trayOnIcon = path.join(__dirname, 'assets/tray-on-icon-light.png')
-    } else {
-      trayOnIcon = path.join(__dirname, 'assets/tray-on-icon.png')
+const trayIcon = {
+  get on() {
+    switch (process.platform) {
+      case 'linux':
+      case 'darwin':
+        if (systemPreferences.isDarkMode()) {
+          return path.join(__dirname, 'assets/tray-on-icon-light.png')
+        } else {
+          return path.join(__dirname, 'assets/tray-on-icon.png')
+        }
+      case 'win32':
+        return path.join(__dirname, 'assets/tray-on-icon-win.ico')
     }
-    trayOffIcon = path.join(__dirname, 'assets/tray-off-icon.png')
-    break
-  case 'win32':
-    trayOnIcon = path.join(__dirname, 'assets/tray-on-icon-win.ico')
-    trayOffIcon = path.join(__dirname, 'assets/tray-off-icon.png')
-    break
+  },
+  get off() {
+    switch (process.platform) {
+      case 'linux':
+      case 'darwin':
+        return path.join(__dirname, 'assets/tray-off-icon.png')
+      case 'win32':
+        return path.join(__dirname, 'assets/tray-off-icon.png')
+    }
+  }
+}
+
+const state = {
+  Disconnected: 'Disconnected',
+  Connecting: 'Connecting',
+  Connected: 'Connected'
+}
+
+var currentState = state.Disconnected
+
+function setState(s) {
+  switch (s) {
+    case state.Disconnected:
+      tray.setImage(trayIcon.off)
+      break
+    case state.Connecting:
+      tray.setImage(trayIcon.off)
+      break
+    case state.Connected:
+      tray.setImage(trayIcon.on)
+      break
+    default:
+      throw 'Invalid State'
+  }
+
+  currentState = s
 }
 
 switch (process.platform) {
@@ -269,6 +302,15 @@ switch (process.platform) {
     break
   case 'linux':
   case 'win32':
+    break
+}
+
+let themeChangedNotifier = null
+switch (process.platform) {
+  case 'darwin':
+    themeChangedNotifier = systemPreferences.subscribeNotification('AppleInterfaceThemeChangedNotification', (e, i) => {
+      setState(currentState)
+    })
     break
 }
 
@@ -398,7 +440,6 @@ async function startCore(callback) {
       log.info('Core will restart upon device resume.')
       coreNeedResume = false
       core = null
-      tray.setImage(trayOffIcon)
       return
     }
 
@@ -406,15 +447,16 @@ async function startCore(callback) {
       log.info('Core fails to startup, interrupt the starting procedure.')
       coreInterrupt = true
       core = null
-      tray.setImage(trayOffIcon)
       dialog.showErrorBox('Error', util.format('Failed to start the Core, see "%s" for more details.', logPath))
     }
+
+    setState(state.Disconnected)
   })
   core.on('error', (err) => {
     log.info('Core errored.')
     coreInterrupt = true
     core = null
-    tray.setImage(trayOffIcon)
+    setState(state.Disconnected)
     log.info(err)
     dialog.showErrorBox('Error', util.format('Failed to start the Core, see "%s" for more details.', logPath))
   })
@@ -502,7 +544,8 @@ async function configRoute() {
     log.info(err)
     dialog.showErrorBox('Error', util.format('Failed to configure routes, see "%s" for more details.', logPath))
   }
-  tray.setImage(trayOnIcon)
+
+  setState(state.Connected)
 }
 
 async function recoverRoute() {
@@ -556,7 +599,7 @@ function stopCore() {
       core = null
     }
   }
-  tray.setImage(trayOffIcon)
+  setState(state.Disconnected)
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms))
@@ -656,7 +699,8 @@ async function down() {
   }
 
   running = false
-  tray.setImage(trayOffIcon)
+
+  setState(state.Disconnected)
 
   log.info('Core downed.')
 }
@@ -799,7 +843,7 @@ function checkForUpdates(silent) {
 }
 
 function createTray() {
-  tray = new Tray(trayOffIcon)
+  tray = new Tray(trayIcon.off)
   contextMenu = Menu.buildFromTemplate([
     { label: 'Connect', type: 'normal', click: function() {
         up()
@@ -1016,4 +1060,14 @@ app.on('ready', init)
 
 app.on('window-all-closed', function () {
   // Do nothing.
+})
+
+app.on('quit', () => {
+  switch (process.platform) {
+    case 'darwin':
+      if (themeChangedNotifier !== null) {
+        systemPreferences.unsubscribeNotification(themeChangedNotifier)
+      }
+      break
+  }
 })
