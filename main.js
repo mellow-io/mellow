@@ -245,12 +245,16 @@ let tunMask = '255.255.255.0'
 let tunGw = '10.255.0.1'
 var tunAddrBlock = new Netmask(tunAddr, tunMask)
 
+function isDarkMode() {
+  return (systemPreferences.getUserDefault('AppleInterfaceStyle', 'string') == 'Dark')
+}
+
 const trayIcon = {
   get on() {
     switch (process.platform) {
       case 'linux':
       case 'darwin':
-        if (systemPreferences.isDarkMode()) {
+        if (isDarkMode()) {
           return path.join(__dirname, 'assets/tray-on-icon-light.png')
         } else {
           return path.join(__dirname, 'assets/tray-on-icon.png')
