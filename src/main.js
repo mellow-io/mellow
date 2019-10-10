@@ -1,3 +1,7 @@
+// =============================
+require('module-alias/register')
+// =============================
+
 const electron = require('electron')
 const { app, systemPreferences, Menu, Tray, BrowserWindow, dialog, shell } = electron
 const path = require('path')
@@ -72,7 +76,7 @@ resetAutoLaunch()
 
 var helperResourcePath
 if (app.isPackaged) {
-  helperResourcePath = path.join(process.resourcesPath, 'helper')
+  helperResourcePath = path.join(process.resourcesPath, 'src/helper')
 } else {
   helperResourcePath = path.join(path.join(__dirname, 'helper'), process.platform)
   for (let f of ['geo.mmdb', 'geosite.dat']) {
