@@ -35,10 +35,6 @@ const schema = {
     type: 'boolean',
     default: true
   },
-  dnsFallback: {
-    type: 'boolean',
-    default: false
-  },
   loglevel: {
     type: 'string',
     default: 'info'
@@ -222,8 +218,6 @@ let running = false
 let helperVerified = false
 let coreNeedResume = false
 let tray = null
-let contextMenu = null
-let startItem = null
 let core = null
 let coreRpcPort = 6002
 let coreInterrupt = false
@@ -428,9 +422,6 @@ async function startCore(callback) {
         '-vconfig', configFile
       ]
       break
-  }
-  if (store.get('dnsFallback')) {
-    params.push('-dnsFallback')
   }
 
   core = spawn(coreCmd, params)
@@ -965,12 +956,6 @@ function createTray() {
           checked: store.get('checkUpdates')
         },
         {
-          label: 'Force DNS over TCP',
-          type: 'checkbox',
-          click: (item) => { store.set('dnsFallback', item.checked) },
-          checked: store.get('dnsFallback')
-        },
-        {
           label: 'Log Level',
           type: 'submenu',
           submenu: Menu.buildFromTemplate([
@@ -1005,7 +990,17 @@ function createTray() {
               checked: store.get('loglevel') == 'none'
             }
           ])
-        }
+        },
+        { type: 'separator' },
+        {
+          label: 'Reset',
+          type: 'normal',
+          click: (item) => {
+            store.clear()
+            tray.destroy()
+            createTray()
+          }
+        },
       ])
     },
     { type: 'separator' },
@@ -1041,6 +1036,7 @@ function createTray() {
 
   tray.setToolTip('Mellow')
   tray.setContextMenu(contextMenu)
+  setState(currentState)
 }
 
 function monitorRunningStatus() {
