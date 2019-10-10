@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [[ ! -f `which md5` ]]; then
+	exit 1
+fi
+if [[ ! -f `which awk` ]]; then
+	exit 1
+fi
+
+md5 "$1" | awk '{print $NF}'

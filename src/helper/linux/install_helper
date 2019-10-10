@@ -1,0 +1,20 @@
+#!/bin/sh
+
+RES_PATH=$1
+INSTALL_PATH=$2
+
+mkdir -p "$INSTALL_PATH"
+
+cp "$RES_PATH/geosite.dat" "$INSTALL_PATH"
+cp "$RES_PATH/geo.mmdb" "$INSTALL_PATH"
+cp "$RES_PATH/core" "$INSTALL_PATH"
+cp "$RES_PATH/md5sum" "$INSTALL_PATH"
+cp "$RES_PATH/ip" "$INSTALL_PATH"
+
+chown root "$INSTALL_PATH/core"
+chown root "$INSTALL_PATH/md5sum"
+chown root "$INSTALL_PATH/ip"
+
+chmod +s "$INSTALL_PATH/core"
+chmod +s "$INSTALL_PATH/md5sum"
+chmod +s "$INSTALL_PATH/ip"
