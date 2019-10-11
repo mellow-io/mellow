@@ -13,41 +13,44 @@ Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
 MyGroup, Proxy-1:Proxy-2, latency, interval=300, timeout=6
 
+[Routing]
+domainStrategy = IPIfNonMatch
+
 [RoutingRule]
 ; type, filter, endpoint tag or enpoint group tag
 DOMAIN-KEYWORD, geosite:category-ads-all, Reject
 IP-CIDR, 8.8.8.8/32, MyGroup
 GEOIP, cn, Direct
 PORT, 123, Direct
-DOMAIN-FULL, www.google.com, MyGroup
+DOMAIN-FULL, a.google.com, MyGroup
+DOMAIN, b.google.com, MyGroup
+DOMAIN-SUFFIX, c.google.com, MyGroup
 DOMAIN-KEYWORD, geosite:cn, Direct
 DOMAIN-KEYWORD, bilibili, Direct
 PROCESS-NAME, git, Proxy-2
 FINAL, Direct
 
-[RoutingDomainStrategy]
-IPIfNonMatch
-
 [Dns]
 ; hijack = dns endpoint tag
-hijack=Dns-Out
+hijack = Dns-Out
+clientIp = 114.114.114.114
 
 [DnsServer]
 ; address, port, tag
 223.5.5.5
-8.8.8.8,53,Remote
+8.8.8.8, 53, Remote
 8.8.4.4
 
 [DnsRule]
 ; type, filter, dns server tag
 DOMAIN-KEYWORD, geosite:geolocation-!cn, Remote
+DOMAIN, www.google.com, Remote
+DOMAIN-FULL, www.twitter.com, Remote
+DOMAIN-SUFFIX, google.com, Remote
 
 [DnsHost]
 ; domain = ip
 localhost = 127.0.0.1
-
-[DnsClientIp]
-114.114.114.114
 
 [Log]
 loglevel = warning
@@ -171,7 +174,9 @@ const json = `
       {
         "type": "field",
         "domain": [
-          "domain:www.google.com"
+          "full:a.google.com",
+          "full:b.google.com",
+          "domain:c.google.com"
         ],
         "balancerTag": "MyGroup"
       },
@@ -207,7 +212,10 @@ const json = `
         "address": "8.8.8.8",
         "port": 53,
         "domains": [
-          "geosite:geolocation-!cn"
+          "geosite:geolocation-!cn",
+          "full:www.google.com",
+          "full:www.twitter.com",
+          "domain:google.com"
         ]
       },
       "8.8.4.4"
@@ -222,36 +230,32 @@ const json = `
 
 describe('Convert conf config to JSON', () => {
   test('Get lines by section', () => {
-    const lines = convert.getLinesBySection(conf, 'RoutingRule')
+    const lines = convert.getLinesBySection(conf, 'DnsServer')
     const expectedLines = [
-      'DOMAIN-KEYWORD, geosite:category-ads-all, Reject',
-      'IP-CIDR, 8.8.8.8/32, MyGroup',
-      'GEOIP, cn, Direct',
-      'PORT, 123, Direct',
-      'DOMAIN-FULL, www.google.com, MyGroup',
-      'DOMAIN-KEYWORD, geosite:cn, Direct',
-      'DOMAIN-KEYWORD, bilibili, Direct',
-      'PROCESS-NAME, git, Proxy-2',
-      'FINAL, Direct'
+      '223.5.5.5',
+      '8.8.8.8, 53, Remote',
+      '8.8.4.4'
     ]
     expect(lines).toEqual(expectedLines)
   })
 
   test('Construct routing object', () => {
     const routingDomainStrategy = convert.getLinesBySection(conf, 'RoutingDomainStrategy')
+    const routingConf = convert.getLinesBySection(conf, 'Routing')
     const balancerRule = convert.getLinesBySection(conf, 'EndpointGroup')
     const routingRule = convert.getLinesBySection(conf, 'RoutingRule')
     const dnsConf = convert.getLinesBySection(conf, 'Dns')
-    const routing = convert.constructRouting(routingDomainStrategy, balancerRule, routingRule, dnsConf)
+    const routing = convert.constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf)
     expect(routing).toEqual(JSON.parse(json).routing)
   })
 
   test('Construct dns object', () => {
+    const dnsConf = convert.getLinesBySection(conf, 'Dns')
     const dnsServer = convert.getLinesBySection(conf, 'DnsServer')
     const dnsRule = convert.getLinesBySection(conf, 'DnsRule')
     const dnsHost = convert.getLinesBySection(conf, 'DnsHost')
     const dnsClientIp = convert.getLinesBySection(conf, 'DnsClientIp')
-    const dns = convert.constructDns(dnsServer, dnsRule, dnsHost, dnsClientIp)
+    const dns = convert.constructDns(dnsConf, dnsServer, dnsRule, dnsHost, dnsClientIp)
     expect(dns).toEqual(JSON.parse(json).dns)
   })
 

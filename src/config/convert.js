@@ -105,9 +105,26 @@ const isBalancerTag = (tag, balancers) => {
   return false
 }
 
-const constructRouting = (strategy, balancer, rule, dns) => {
+const constructRouting = (routingConf, strategy, balancer, rule, dns) => {
   var routing = { balancers: [], rules: [] }
 
+  routingConf.forEach((line) => {
+    const parts = line.trim().split('=')
+    if (parts.length != 2) {
+      return // next
+    }
+    const k = parts[0].trim()
+    const v = parts[1].trim()
+    switch (k) {
+      case 'domainStrategy':
+        if (v.length > 0) {
+          routing.domainStrategy = v
+        }
+        break
+    }
+  })
+
+  // Deprecated
   strategy.forEach((line) => {
     line = line.trim()
     if (line.length != 0) {
@@ -197,8 +214,12 @@ const constructRouting = (strategy, balancer, rule, dns) => {
       case 'DOMAIN-KEYWORD':
         filters.push(filter)
         break
-      case 'DOMAIN-FULL':
+      case 'DOMAIN-SUFFIX':
         filters.push(util.format('domain:%s', filter))
+        break
+      case 'DOMAIN':
+      case 'DOMAIN-FULL':
+        filters.push(util.format('full:%s', filter))
         break
       case 'IP-CIDR':
         filters.push(filter)
@@ -264,13 +285,26 @@ const constructRouting = (strategy, balancer, rule, dns) => {
   return routing
 }
 
-const constructDns = (server, rule, host, clientIp) => {
+const constructDns = (dnsConf, server, rule, host, clientIp) => {
   var dns = { servers: [] }
 
+  dnsConf.forEach((line) => {
+    const parts = line.trim().split('=')
+    if (parts.length != 2) {
+      return // next
+    }
+    const k = parts[0].trim()
+    const v = parts[1].trim()
+    if (k == 'clientIp' && v.length > 0) {
+      dns.clientIp = v
+    }
+  })
+
+  // Deprecated
   if (clientIp.length == 1) {
     const ip = clientIp[0].trim()
     if (ip.length > 0) {
-      dns.clientIp =  ip
+      dns.clientIp = ip
     }
   }
 
@@ -302,8 +336,12 @@ const constructDns = (server, rule, host, clientIp) => {
     var filter = parts[1].trim()
     const tag = parts[2].trim()
     switch (type) {
-      case 'DOMAIN-FULL':
+      case 'DOMAIN-SUFFIX':
         filter = util.format('domain:%s', filter)
+        break
+      case 'DOMAIN':
+      case 'DOMAIN-FULL':
+        filter = util.format('full:%s', filter)
         break
     }
     rules.push({
@@ -316,18 +354,18 @@ const constructDns = (server, rule, host, clientIp) => {
     const parts = line.trim().split(',')
     if (parts.length == 1) {
       servers.push({
-        address: parts[0]
+        address: parts[0].trim()
       })
     } else if (parts.length == 3) {
       var filters = []
       rules.forEach((r) => {
-        if (r.tag == parts[2]) {
+        if (r.tag == parts[2].trim()) {
           filters.push(r.filter)
         }
       })
       servers.push({
-        address: parts[0],
-        port: parseInt(parts[1]),
+        address: parts[0].trim(),
+        port: parseInt(parts[1].trim()),
         filters: filters
       })
     }
@@ -496,16 +534,17 @@ const constructOutbounds = (endpoint) => {
 
 const constructJson = (conf) => {
     const routingDomainStrategy = getLinesBySection(conf, 'RoutingDomainStrategy')
+    const routingConf = getLinesBySection(conf, 'Routing')
     const balancerRule = getLinesBySection(conf, 'EndpointGroup')
     const routingRule = getLinesBySection(conf, 'RoutingRule')
     const dnsConf = getLinesBySection(conf, 'Dns')
-    const routing = constructRouting(routingDomainStrategy, balancerRule, routingRule, dnsConf)
+    const routing = constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf)
 
     const dnsServer = getLinesBySection(conf, 'DnsServer')
     const dnsRule = getLinesBySection(conf, 'DnsRule')
     const dnsHost = getLinesBySection(conf, 'DnsHost')
     const dnsClientIp = getLinesBySection(conf, 'DnsClientIp')
-    const dns = constructDns(dnsServer, dnsRule, dnsHost, dnsClientIp)
+    const dns = constructDns(dnsConf, dnsServer, dnsRule, dnsHost, dnsClientIp)
 
     const logLines = getLinesBySection(conf, 'Log')
     const log = constructLog(logLines)
