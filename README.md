@@ -1,5 +1,5 @@
 # Mellow
-一个基于规则进行透明代理的 V2Ray 客户端，支持 Windows、macOS 和 Linux。
+Mellow 是一个可以基于规则进行全局透明代理的 V2Ray 客户端，支持 Windows、macOS 和 Linux。
 
 ## 下载
 
@@ -82,11 +82,11 @@ yarn && yarn distlinux
 
 
 ### 应用进程规则
-支持 `*` 和 `?` 通配符匹配，匹配内容为进程名称。
+支持 `*` 和 `?` 通配符匹配，匹配内容为进程名称，包括所有直接或非直接的父进程。
 
-在 Windows 上，进程名称通常为 `xxx.exe`，例如 `chrome.exe`，在 Mellow 的 `Statistics` 中可方便查看。
+在 Windows 上，进程名称通常为 `xxx.exe`，例如 `chrome.exe`，在 Mellow 的 `Sessions` 中可方便查看。
 
-在 macOS 上也可以通过 Mellow 的 `Statistics` 查看，也可以通过 `ps` 命令查看进程。
+在 macOS 上也可以通过 Mellow 的 `Sessions` 查看，也可以通过 `ps` 命令查看进程。
 
 ```json
 "routing": {
@@ -111,7 +111,9 @@ Mellow 是一个透明代理客户端，如果不理解，那说得实际点，�
 所以也很清楚的是，如果仅需要代理浏览器的请求，或者也不嫌麻烦为个别程序单独设置代理的话，是没必要使用 Mellow 的。
 
 ### 关于配置和启动
-配置就是 V2Ray 的纯文本 JSON 配置文件，没有任何 UI，初次打开程序，在菜单栏上选择 Config -> Edit 就会打开配置文件让你编辑，编辑好后保存，即可启动代理，待图标变色后，就表示代理已经启动。
+支持两种配置文件格式，一个是类 ini 格式，另一个是 V2Ray JSON 格式，两种格式的配置可以同时存在，配置样例在下面。
+
+可以在 Tray 菜单 Config Template 中创建对应的配置模板，创建后就是一个纯文本文件，自行打开目录去编辑完善配置，编辑好后保存，即可启动代理，待图标变色后，就表示代理已经启动。
 
 macOS 客户端在初次和每次升级后启动时，都可能会弹框请求管理权限。
 
@@ -119,7 +121,7 @@ Windows 客户端在每次启动时都会弹框请求管理权限，如果不希
 
 如果启动代理后有任何问题，比如弹出错误，比如无法连接，要反馈的话，请附上必要的截图（错误弹框等）和日志，日志更重要。
 
-任何配置改动都需要重启生效。
+任何配置改动都需要重连生效。
 
 ### 关于 DNS
 因为系统 DNS 很不好控制，推荐 Freedom Outbound 使用 UseIP 策略，再配置好内建 DNS 服务器，这样可以避免一些奇怪问题，也增加 DNS 缓存的利用效率。
@@ -141,14 +143,14 @@ DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/
 ### 关于日志
 日志有两份，一份是 Mellow 的日志，一份是 V2Ray 的日志，V2Ray 日志如果输出到 stdout/stderr，那 V2Ray 的日志会被打印到 Mellow 的日志里。
 
-另打开 Statistics 页面可看到所有请求的详细信息，注意这个页面不会自动刷新。
+另打开 Sessions 页面可看到所有请求的详细信息，注意这个页面不会自动刷新。
 
 ### 关于 GUI
 目前没有任何计划做成 UI 配置的方式。
 
 ## FAQ
 
-### 为什么在 Statistics 中有些请求显示进程名称为 `unknown process`？
+### 为什么在 Sessions 中有些请求显示进程名称为 `unknown process`？
 
 1. 某些 UDP 会话如果持续时间过短，则会无法获取其发送进程。
 2. 在 Windows 上，会看到较多的 `unknown process`，这是因为 Mellow 没有权限访问系统进程的信息，特别是 DNS 请求，因为发送 DNS 请求的通常是一个名为 svchost.exe 的系统进程。
@@ -172,6 +174,60 @@ sudo sysctl -w net.ipv4.ip_forward=1
 ```
 
 注意这种网关形式上有别于一般的路由器透明代理设置，这里的 “网关” 是局域网里另一台普通的局域网设备，它本身需要路由器作网关。
+
+## conf 配置样例
+```ini
+[Endpoint]
+; tag, parser, parser-specific params...
+Direct, builtin, freedom, domainStrategy=UseIP
+Reject, builtin, blackhole
+Dns-Out, builtin, dns
+Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true#WSS+Outbound
+Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp#TCP+Outbound
+
+[EndpointGroup]
+; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
+MyGroup, Proxy-1:Proxy-2, latency, interval=300, timeout=6
+
+[RoutingRule]
+; type, filter, endpoint tag or enpoint group tag
+DOMAIN-KEYWORD, geosite:category-ads-all, Reject
+IP-CIDR, 8.8.8.8/32, MyGroup
+GEOIP, cn, Direct
+PORT, 123, Direct
+DOMAIN-FULL, www.google.com, MyGroup
+DOMAIN-KEYWORD, geosite:cn, Direct
+DOMAIN-KEYWORD, bilibili, Direct
+PROCESS-NAME, git, Proxy-2
+FINAL, Direct
+
+[RoutingDomainStrategy]
+IPIfNonMatch
+
+[Dns]
+; hijack = dns endpoint tag
+hijack=Dns-Out
+
+[DnsServer]
+; address, port, tag
+223.5.5.5
+8.8.8.8,53,Remote
+8.8.4.4
+
+[DnsRule]
+; type, filter, dns server tag
+DOMAIN-KEYWORD, geosite:geolocation-!cn, Remote
+
+[DnsHost]
+; domain = ip
+localhost = 127.0.0.1
+
+[DnsClientIp]
+114.114.114.114
+
+[Log]
+loglevel = warning
+```
 
 ## 单纯的 Shadowsocks 全局代理配置
 
