@@ -53,54 +53,59 @@ yarn && yarn distwin
 yarn && yarn distlinux
 ```
 
-## 扩展功能配置方式
+## 配置
+```ini
+[Endpoint]
+; tag, parser, parser-specific params...
+Direct, builtin, freedom, domainStrategy=UseIP
+Reject, builtin, blackhole
+Dns-Out, builtin, dns
+Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true#WSS+Outbound
+Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp#TCP+Outbound
 
-### 自动选择最优线路
-可根据代理请求的 RTT，自动选择负载均衡组中最优线路来转发请求。
+[EndpointGroup]
+; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
+MyGroup, Proxy-1:Proxy-2, latency, interval=300, timeout=6
 
-```json
-"routing": {
-    "balancers": [
-        {
-            "tag": "server_lb",
-            "selector": [
-                "server_1",
-                "server_2"
-            ],
-            "strategy": "latency",
-            "totalMeasures": 2,
-            "interval": 300,
-            "delay": 1,
-            "timeout": 6,
-            "tolerance": 300,
-            "probeTarget": "tls:www.google.com:443",
-            "probeContent": "HEAD / HTTP/1.1\r\n\r\n"
-        }
-    ]
-}
-```
+[RoutingRule]
+; type, filter, endpoint tag or enpoint group tag
+DOMAIN-KEYWORD, geosite:category-ads-all, Reject
+IP-CIDR, 223.5.5.5/32, Direct
+IP-CIDR, 8.8.8.8/32, MyGroup
+IP-CIDR, 8.8.4.4/32, MyGroup
+DOMAIN-KEYWORD, geosite:cn, Direct
+GEOIP, cn, Direct
+PORT, 123, Direct
+PROCESS-NAME, cloudmusic.exe, Direct
+PROCESS-NAME, NeteaseMusic, Direct
+FINAL, MyGroup
 
+[RoutingDomainStrategy]
+IPIfNonMatch
 
-### 应用进程规则
-支持 `*` 和 `?` 通配符匹配，匹配内容为进程名称，包括所有直接或非直接的父进程。
+[Dns]
+; hijack = dns endpoint tag
+hijack=Dns-Out
 
-在 Windows 上，进程名称通常为 `xxx.exe`，例如 `chrome.exe`，在 Mellow 的 `Sessions` 中可方便查看。
+[DnsServer]
+; address, port, tag
+223.5.5.5
+8.8.8.8,53,Remote
+8.8.4.4
 
-在 macOS 上也可以通过 Mellow 的 `Sessions` 查看，也可以通过 `ps` 命令查看进程。
+[DnsRule]
+; type, filter, dns server tag
+DOMAIN-KEYWORD, geosite:geolocation-!cn, Remote
 
-```json
-"routing": {
-    "rules": [
-        {
-            "app": [
-                "git*",
-                "chrome.exe"
-            ],
-            "type": "field",
-            "outboundTag": "proxy"
-        }
-    ]
-}
+[DnsHost]
+; domain = ip
+localhost = 127.0.0.1
+
+[DnsClientIp]
+114.114.114.114
+
+[Log]
+loglevel = warning
 ```
 
 ## 一些说明
@@ -111,7 +116,7 @@ Mellow 是一个透明代理客户端，如果不理解，那说得实际点，�
 所以也很清楚的是，如果仅需要代理浏览器的请求，或者也不嫌麻烦为个别程序单独设置代理的话，是没必要使用 Mellow 的。
 
 ### 关于配置和启动
-支持两种配置文件格式，一个是类 ini 格式，另一个是 V2Ray JSON 格式，两种格式的配置可以同时存在，配置样例在下面。
+支持两种配置文件格式，一个是类 ini 的 conf 格式，另一个是 V2Ray JSON 格式，两种格式的配置可以同时存在。
 
 可以在 Tray 菜单 Config Template 中创建对应的配置模板，创建后就是一个纯文本文件，自行打开目录去编辑完善配置，编辑好后保存，即可启动代理，待图标变色后，就表示代理已经启动。
 
@@ -174,60 +179,6 @@ sudo sysctl -w net.ipv4.ip_forward=1
 ```
 
 注意这种网关形式上有别于一般的路由器透明代理设置，这里的 “网关” 是局域网里另一台普通的局域网设备，它本身需要路由器作网关。
-
-## conf 配置样例
-```ini
-[Endpoint]
-; tag, parser, parser-specific params...
-Direct, builtin, freedom, domainStrategy=UseIP
-Reject, builtin, blackhole
-Dns-Out, builtin, dns
-Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true#WSS+Outbound
-Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp#TCP+Outbound
-
-[EndpointGroup]
-; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
-MyGroup, Proxy-1:Proxy-2, latency, interval=300, timeout=6
-
-[RoutingRule]
-; type, filter, endpoint tag or enpoint group tag
-DOMAIN-KEYWORD, geosite:category-ads-all, Reject
-IP-CIDR, 8.8.8.8/32, MyGroup
-GEOIP, cn, Direct
-PORT, 123, Direct
-DOMAIN-FULL, www.google.com, MyGroup
-DOMAIN-KEYWORD, geosite:cn, Direct
-DOMAIN-KEYWORD, bilibili, Direct
-PROCESS-NAME, git, Proxy-2
-FINAL, Direct
-
-[RoutingDomainStrategy]
-IPIfNonMatch
-
-[Dns]
-; hijack = dns endpoint tag
-hijack=Dns-Out
-
-[DnsServer]
-; address, port, tag
-223.5.5.5
-8.8.8.8,53,Remote
-8.8.4.4
-
-[DnsRule]
-; type, filter, dns server tag
-DOMAIN-KEYWORD, geosite:geolocation-!cn, Remote
-
-[DnsHost]
-; domain = ip
-localhost = 127.0.0.1
-
-[DnsClientIp]
-114.114.114.114
-
-[Log]
-loglevel = warning
-```
 
 ## 单纯的 Shadowsocks 全局代理配置
 
@@ -431,5 +382,55 @@ loglevel = warning
             }
         ]
     }
+}
+```
+
+## 扩展功能说明
+
+### 自动选择最优线路
+可根据代理请求的 RTT，自动选择负载均衡组中最优线路来转发请求。
+
+```json
+"routing": {
+    "balancers": [
+        {
+            "tag": "server_lb",
+            "selector": [
+                "server_1",
+                "server_2"
+            ],
+            "strategy": "latency",
+            "totalMeasures": 2,
+            "interval": 300,
+            "delay": 1,
+            "timeout": 6,
+            "tolerance": 300,
+            "probeTarget": "tls:www.google.com:443",
+            "probeContent": "HEAD / HTTP/1.1\r\n\r\n"
+        }
+    ]
+}
+```
+
+
+### 应用进程规则
+支持 `*` 和 `?` 通配符匹配，匹配内容为进程名称，包括所有直接或非直接的父进程。
+
+在 Windows 上，进程名称通常为 `xxx.exe`，例如 `chrome.exe`，在 Mellow 的 `Sessions` 中可方便查看。
+
+在 macOS 上也可以通过 Mellow 的 `Sessions` 查看，也可以通过 `ps` 命令查看进程。
+
+```json
+"routing": {
+    "rules": [
+        {
+            "app": [
+                "git*",
+                "chrome.exe"
+            ],
+            "type": "field",
+            "outboundTag": "proxy"
+        }
+    ]
 }
 ```
