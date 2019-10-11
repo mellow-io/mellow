@@ -1,7 +1,6 @@
 {
   "name": "Mellow",
   "version": "0.1.2",
-  "description": "Mellow",
   "main": "src/main.js",
   "scripts": {
     "test": "jest",
@@ -12,10 +11,6 @@
     "distlinux": "electron-builder -l",
     "dlgeo": "bash scripts/dl_mmdb.sh && bash scripts/dl_geosite.sh"
   },
-  "keywords": [
-    "proxy"
-  ],
-  "author": "Mellow",
   "devDependencies": {
     "electron": "^6.0.0",
     "electron-builder": "^21.2.0",
@@ -27,7 +22,7 @@
     "electron-log": "^3.0.7",
     "electron-prompt": "^1.3.1",
     "electron-store": "^4.0.0",
-    "module-alias": "^2.2.2",
+    "module-alias": "eycorsican/module-alias",
     "netmask": "^1.0.6",
     "semver": "^6.3.0",
     "sudo-prompt": "eycorsican/sudo-prompt"
@@ -37,7 +32,7 @@
       "^@mellow(.*)$": "<rootDir>/src/$1"
     }
   },
-  "_moduleAliases": {
+  "moduleAliases": {
     "@mellow": "src"
   },
   "build": {

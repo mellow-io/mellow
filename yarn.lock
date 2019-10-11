@@ -3026,10 +3026,9 @@ mkdirp@0.5.1, mkdirp@^0.5.0, mkdirp@^0.5.1:
   dependencies:
     minimist "0.0.8"
 
-module-alias@^2.2.2:
+module-alias@eycorsican/module-alias:
   version "2.2.2"
-  resolved "https://registry.npm.taobao.org/module-alias/download/module-alias-2.2.2.tgz#151cdcecc24e25739ff0aa6e51e1c5716974c0e0"
-  integrity sha1-FRzc7MJOJXOf8KpuUeHFcWl0wOA=
+  resolved "https://codeload.github.com/eycorsican/module-alias/tar.gz/00e544390673fb9a0d66909a5c6f16984ad21f54"
 
 ms@2.0.0:
   version "2.0.0"
