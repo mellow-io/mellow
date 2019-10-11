@@ -1,5 +1,4 @@
-exports.confTemplate = `
-[Endpoint]
+exports.confTemplate = `[Endpoint]
 ; tag, parser, parser-specific params...
 Direct, builtin, freedom, domainStrategy=UseIP
 Reject, builtin, blackhole
@@ -48,8 +47,8 @@ DOMAIN-KEYWORD, geosite:geolocation-!cn, Remote
 localhost = 127.0.0.1
 
 [Log]
-loglevel = warning
-`
+loglevel = warning`
+
 exports.jsonTemplate = `{
     "log": {
         "loglevel": "warning"

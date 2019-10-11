@@ -572,31 +572,39 @@ const constructOutbounds = (endpoint) => {
 }
 
 const constructJson = (conf) => {
-    const routingDomainStrategy = getLinesBySection(conf, 'RoutingDomainStrategy')
-    const routingConf = getLinesBySection(conf, 'Routing')
-    const balancerRule = getLinesBySection(conf, 'EndpointGroup')
-    const routingRule = getLinesBySection(conf, 'RoutingRule')
-    const dnsConf = getLinesBySection(conf, 'Dns')
-    const routing = constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf)
+  const routingDomainStrategy = getLinesBySection(conf, 'RoutingDomainStrategy')
+  const routingConf = getLinesBySection(conf, 'Routing')
+  const balancerRule = getLinesBySection(conf, 'EndpointGroup')
+  const routingRule = getLinesBySection(conf, 'RoutingRule')
+  const dnsConf = getLinesBySection(conf, 'Dns')
+  const routing = constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf)
 
-    const dnsServer = getLinesBySection(conf, 'DnsServer')
-    const dnsRule = getLinesBySection(conf, 'DnsRule')
-    const dnsHost = getLinesBySection(conf, 'DnsHost')
-    const dnsClientIp = getLinesBySection(conf, 'DnsClientIp')
-    const dns = constructDns(dnsConf, dnsServer, dnsRule, dnsHost, dnsClientIp)
+  const dnsServer = getLinesBySection(conf, 'DnsServer')
+  const dnsRule = getLinesBySection(conf, 'DnsRule')
+  const dnsHost = getLinesBySection(conf, 'DnsHost')
+  const dnsClientIp = getLinesBySection(conf, 'DnsClientIp')
+  const dns = constructDns(dnsConf, dnsServer, dnsRule, dnsHost, dnsClientIp)
 
-    const logLines = getLinesBySection(conf, 'Log')
-    const log = constructLog(logLines)
+  const logLines = getLinesBySection(conf, 'Log')
+  const log = constructLog(logLines)
 
-    const endpoint = getLinesBySection(conf, 'Endpoint')
-    const outbounds = constructOutbounds(endpoint)
+  const endpoint = getLinesBySection(conf, 'Endpoint')
+  const outbounds = constructOutbounds(endpoint)
 
-    return {
-      log: log,
-      dns: dns,
-      outbounds: outbounds,
-      routing: routing
+  var o = {
+    log: log,
+    dns: dns,
+    outbounds: outbounds,
+    routing: routing
+  }
+
+  for (var prop in o) {
+    if (Object.entries(o[prop]).length === 0) {
+      delete o[prop]
     }
+  }
+
+  return o
 }
 
 module.exports = {
