@@ -861,6 +861,7 @@ function createTray() {
       click: function() {
         const fullpath = path.join(configFolder, config)
         store.set('selectedConfig', fullpath)
+        reloadTray()
         if (isConnected()) {
           reconnect()
         }
@@ -871,7 +872,19 @@ function createTray() {
     mainMenus.push({ type: 'separator' })
   }
   mainMenus.push({
-    label: 'Config Template',
+    label: 'Edit Selected',
+    type: 'normal',
+    click: function() {
+      const config = store.get('selectedConfig')
+      if (config.length > 0) {
+        shell.openItem(config)
+      } else {
+        dialog.showMessageBox({message: 'No selected config.'})
+        return
+      }
+    }
+  }, {
+    label: 'Create Config',
     type: 'submenu',
     submenu: Menu.buildFromTemplate([{
       label: 'Create Conf Template',
@@ -1062,7 +1075,7 @@ function createTray() {
       }
     },
     {
-      label: 'Open Log',
+      label: 'Log',
       type: 'normal',
       click: () => { shell.openItem(logPath) }
     },
