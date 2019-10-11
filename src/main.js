@@ -20,6 +20,9 @@ const prompt = require('electron-prompt')
 const https = require('https')
 const semver = require('semver')
 
+const config = require('@mellow/config/config')
+const convert = require('@mellow/config/convert')
+
 const autoLauncher = new AutoLaunch({name: 'Mellow'})
 
 const schema = {
@@ -42,7 +45,11 @@ const schema = {
   configUrl: {
     type: 'string',
     default: 'https://www.example.org/cfg.json'
-  }
+  },
+  selectedConfig: {
+    type: 'string',
+    default: ''
+  },
 }
 const store = new Store({name: 'preference', schema: schema})
 
@@ -110,90 +117,26 @@ switch (process.platform) {
 }
 
 let logPath = log.transports.file.findLogPath('Mellow')
-let configFolder = app.getPath('userData')
-let configFile = path.join(configFolder, 'cfg.json')
-let configTemplate = `{
-    "log": {
-        "loglevel": "warning"
-    },
-    "outbounds": [
-        {
-            "protocol": "vmess",
-            "settings": {
-                "vnext": [
-                    {
-                        "users": [
-                            {
-                                "id": "d2953280-9eb3-451d-aef6-283cd79ba62c",
-                                "alterId": 4
-                            }
-                        ],
-                        "address": "yourserver.com",
-                        "port": 10086
-                    }
-                ]
-            },
-            "tag": "proxy"
-        },
-        {
-            "protocol": "freedom",
-            "settings": {
-              "domainStrategy": "UseIP"
-            },
-            "tag": "direct"
-        }
-    ],
-    "dns": {
-        "servers": [
-            {
-                "address": "8.8.8.8",
-                "port": 53
-            },
-            {
-                "address": "223.5.5.5",
-                "port": 53,
-                "domains": [
-                    "geosite:cn"
-                ]
-            }
-        ]
-    },
-    "routing": {
-        "domainStrategy": "IPIfNonMatch",
-        "rules": [
-            {
-                "ip": [
-                    "8.8.8.8/32"
-                ],
-                "type": "field",
-                "outboundTag": "proxy"
-            },
-            {
-                "type": "field",
-                "domain": [
-                    "geosite:cn"
-                ],
-                "outboundTag": "direct"
-            },
-            {
-                "type": "field",
-                "ip": [
-                    "geoip:cn",
-                    "geoip:private"
-                ],
-                "outboundTag": "direct"
-            },
-            {
-                "ip": [
-                    "0.0.0.0/0",
-                    "::/0"
-                ],
-                "type": "field",
-                "outboundTag": "proxy"
-            }
-        ]
-    }
-}`
+let configFolder = path.join(app.getPath('userData'), 'config')
+let lagecyConfigFile = path.join(app.getPath('userData'), 'cfg.json')
+let runningConfig = path.join(app.getPath('userData'), 'running-config.json')
+
+const createConfigFolderIfNotExists = () => {
+  if (!fs.existsSync(configFolder)) {
+    fs.mkdirSync(configFolder, { recursive: true })
+    log.info(util.format('Created config folder %s', configFolder))
+  }
+}
+createConfigFolderIfNotExists()
+
+const handleLagecyConfigFile = () => {
+  if (fs.existsSync(lagecyConfigFile)) {
+    const newPath = path.join(configFolder, 'cfg.json')
+    fs.renameSync(lagecyConfigFile, newPath)
+    log.info(util.format('Renamed lagecy config file %s to %s', lagecyConfigFile, newPath))
+  }
+}
+handleLagecyConfigFile()
 
 var md5Cmd
 var routeCmd
@@ -280,6 +223,10 @@ const state = {
 
 var currentState = state.Disconnected
 
+function isConnected() {
+  return (currentState == state.Connected)
+}
+
 function setState(s) {
   switch (s) {
     case state.Disconnected:
@@ -300,7 +247,9 @@ function setState(s) {
 
 switch (process.platform) {
   case 'darwin':
-    app.dock.hide()
+    if (app.isPackaged) {
+      app.dock.hide()
+    }
     break
   case 'linux':
   case 'win32':
@@ -365,13 +314,36 @@ function checkHelper() {
 async function startCore(callback) {
   coreInterrupt = false
 
-  try {
-    if (!fs.existsSync(configFile)) {
-      dialog.showMessageBox({message: 'Config file not found.'})
+  var parsedConfig
+
+  const selectedConfig = store.get('selectedConfig')
+  if (selectedConfig.length == 0) {
+      dialog.showMessageBox({ message: 'Please select a config.' })
+      return
+  }
+  if (selectedConfig.includes('.conf')) {
+    try {
+      const content = fs.readFileSync(selectedConfig, 'utf-8')
+      const v2json = convert.constructJson(content)
+      parsedConfig = JSON.stringify(v2json, null, 2)
+    } catch(err) {
+      dialog.showErrorBox('Config Error', err)
       return
     }
-  } catch(err) {
-    dialog.showErrorBox('Error', err)
+  } else if (selectedConfig.includes('.json')) {
+    const content = fs.readFileSync(selectedConfig, 'utf-8')
+    parsedConfig = JSON.stringify(JSON.parse(content), null, 2)
+  } else {
+      dialog.showErrorBox('Config Error', 'Unknown config suffix')
+      return
+  }
+
+  if (parsedConfig) {
+    f = fs.openSync(runningConfig, 'w')
+    fs.writeFileSync(f, parsedConfig)
+    fs.closeSync(f)
+  } else {
+    dialog.showErrorBox('Config Error', 'Parsing config failed')
     return
   }
 
@@ -397,7 +369,7 @@ async function startCore(callback) {
         '-tunMask', tunMask,
         '-tunGw', tunGw,
         '-sendThrough', sendThrough,
-        '-vconfig', configFile,
+        '-vconfig', runningConfig,
         '-proxyType', 'v2ray',
         '-relayICMP',
         '-loglevel', store.get('loglevel'),
@@ -419,7 +391,7 @@ async function startCore(callback) {
         '-relayICMP',
         '-stats',
         '-loglevel', store.get('loglevel'),
-        '-vconfig', configFile
+        '-vconfig', runningConfig
       ]
       break
   }
@@ -800,7 +772,7 @@ function createConfigFileIfNotExists() {
       fs.mkdirSync(configFolder, { recursive: true })
     }
     fd = fs.openSync(configFile, 'w')
-    fs.writeSync(fd, configTemplate)
+    fs.writeSync(fd, config.jsonTemplate)
     fs.closeSync(fd)
   }
 }
@@ -841,9 +813,29 @@ function checkForUpdates(silent) {
   })
 }
 
+function reconnect() {
+  down()
+  up()
+}
+
+function getFormattedTime() {
+    var today = new Date();
+    var y = today.getFullYear();
+    // JavaScript months are 0-based.
+    var m = today.getMonth() + 1;
+    var d = today.getDate();
+    var h = today.getHours();
+    var mi = today.getMinutes();
+    var s = today.getSeconds();
+    return y + "-" + m + "-" + d + "-" + h + "-" + mi + "-" + s;
+}
+
 function createTray() {
   tray = new Tray(trayIcon.off)
-  contextMenu = Menu.buildFromTemplate([
+
+  var mainMenus = []
+  mainMenus = [
+    ...mainMenus,
     { label: 'Connect', type: 'normal', click: function() {
         up()
       }
@@ -853,84 +845,142 @@ function createTray() {
       }
     },
     { label: 'Reconnect', type: 'normal', click: function() {
-        down()
-        up()
+        reconnect()
       }
-    },
-    { type: 'separator' },
-    { label: 'Config', type: 'submenu', submenu: Menu.buildFromTemplate([
-        { label: 'Edit', type: 'normal', click: function() {
-            try {
-              createConfigFileIfNotExists()
-            } catch (err) {
-              dialog.showErrorBox('Error', 'Failed to create file/folder: ' + err)
-            }
-            shell.openItem(configFile)
-          }
-        },
-        {
-          label: 'Download From URL',
-          type: 'normal',
-          click: () => {
-            prompt({
-              title: 'Download V2Ray Config',
-              label: 'V2Ray Config URL:',
-              value: store.get('configUrl'),
-              inputAttrs: {
-                  type: 'url'
-              }
-            })
-            .then((r) => {
-                if (r) {
-                  opt = {
-                    timeout: 15 * 1000
-                  }
-                  https.get(r, opt, (res) => {
-                    if (res.statusCode != 200) {
-                      dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
-                      return
-                    }
-                    var body = ''
-                    res.on('data', (data) => {
-                      body += data
-                    })
-                    res.on('end', () => {
-                      try {
-                        createConfigFileIfNotExists()
-                      } catch (err) {
-                        dialog.showErrorBox('Error', 'Failed to create file/folder: ' + err)
-                        return
-                      }
+    }
+  ]
 
-                      fd = fs.openSync(configFile, 'w')
-                      fs.writeSync(fd, body)
-                      fs.closeSync(fd)
+  mainMenus.push({ type: 'separator' })
 
-                      store.set('configUrl', r)
-                      dialog.showMessageBox({message: 'Success.'})
-                    })
-                    res.on('timeout', ()=> {
-                      dialog.showErrorBox('Error', 'HTTP GET timeout')
-                    })
-                  }).on('error', (err) => {
-                    dialog.showErrorBox('Error', 'HTTP GET failed: ' + err)
-                  })
-                }
-            })
-            .catch((err) => {
-              dialog.showErrorBox('Error', 'Failed to download config: ' + err)
-            })
-          }
-        },
-        {
-          label: 'Open Folder',
-          type: 'normal',
-          click: () => { shell.openItem(configFolder) }
-        },
-      ])
-    },
-    { type: 'separator' },
-    {
+  const configs = fs.readdirSync(configFolder).filter(x => (x.match(/^[^.].*(\.conf|\.json)$/g)))
+  configs.forEach((config) => {
+    mainMenus.push({
+      label: config,
+      type: 'checkbox',
+      checked: ((store.get('selectedConfig').length > 0) && (config == store.get('selectedConfig').replace(/^.*[\\\/]/, ''))),
+      click: function() {
+        const fullpath = path.join(configFolder, config)
+        store.set('selectedConfig', fullpath)
+        if (isConnected()) {
+          reconnect()
+        }
+      }
+    })
+  })
+  if (configs.length > 0) {
+    mainMenus.push({ type: 'separator' })
+  }
+  mainMenus.push({
+    label: 'Config Template',
+    type: 'submenu',
+    submenu: Menu.buildFromTemplate([{
+      label: 'Create Conf Template',
+      type: 'normal',
+      click: () => {
+        f = fs.openSync(path.join(configFolder, getFormattedTime() + '.conf'), 'w+')
+        fs.writeFileSync(f, config.confTemplate)
+        fs.closeSync(f)
+        reloadTray()
+      }
+    }, {
+      label: 'Create JSON Template',
+      type: 'normal',
+      click: () => {
+        f = fs.openSync(path.join(configFolder, getFormattedTime() + '.json'), 'w+')
+        fs.writeFileSync(f, config.jsonTemplate)
+        fs.closeSync(f)
+        reloadTray()
+      }
+    }])
+  })
+  mainMenus.push({
+    label: 'Config Folder',
+    type: 'normal',
+    click: () => { shell.openItem(configFolder) }
+  })
+  mainMenus.push({
+    label: 'Reload Configs',
+    type: 'normal',
+    click: () => {
+      reloadTray()
+    }
+  })
+
+  mainMenus.push({ type: 'separator' })
+
+    // { label: 'Config', type: 'submenu', submenu: Menu.buildFromTemplate([
+    //     { label: 'Edit', type: 'normal', click: function() {
+    //         try {
+    //           createConfigFileIfNotExists()
+    //         } catch (err) {
+    //           dialog.showErrorBox('Error', 'Failed to create file/folder: ' + err)
+    //         }
+    //         shell.openItem(configFile)
+    //       }
+    //     },
+    //     {
+    //       label: 'Download From URL',
+    //       type: 'normal',
+    //       click: () => {
+    //         prompt({
+    //           title: 'Download V2Ray Config',
+    //           label: 'V2Ray Config URL:',
+    //           value: store.get('configUrl'),
+    //           inputAttrs: {
+    //               type: 'url'
+    //           }
+    //         })
+    //         .then((r) => {
+    //             if (r) {
+    //               opt = {
+    //                 timeout: 15 * 1000
+    //               }
+    //               https.get(r, opt, (res) => {
+    //                 if (res.statusCode != 200) {
+    //                   dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
+    //                   return
+    //                 }
+    //                 var body = ''
+    //                 res.on('data', (data) => {
+    //                   body += data
+    //                 })
+    //                 res.on('end', () => {
+    //                   try {
+    //                     createConfigFileIfNotExists()
+    //                   } catch (err) {
+    //                     dialog.showErrorBox('Error', 'Failed to create file/folder: ' + err)
+    //                     return
+    //                   }
+
+    //                   fd = fs.openSync(configFile, 'w')
+    //                   fs.writeSync(fd, body)
+    //                   fs.closeSync(fd)
+
+    //                   store.set('configUrl', r)
+    //                   dialog.showMessageBox({message: 'Success.'})
+    //                 })
+    //                 res.on('timeout', ()=> {
+    //                   dialog.showErrorBox('Error', 'HTTP GET timeout')
+    //                 })
+    //               }).on('error', (err) => {
+    //                 dialog.showErrorBox('Error', 'HTTP GET failed: ' + err)
+    //               })
+    //             }
+    //         })
+    //         .catch((err) => {
+    //           dialog.showErrorBox('Error', 'Failed to download config: ' + err)
+    //         })
+    //       }
+    //     },
+    //     {
+    //       label: 'Open Folder',
+    //       type: 'normal',
+    //       click: () => { shell.openItem(configFolder) }
+    //     },
+    //   ])
+    // },
+
+    var otherMenus = [{
       label: 'Preferences',
       type: 'submenu',
       submenu: Menu.buildFromTemplate([
@@ -997,14 +1047,13 @@ function createTray() {
           type: 'normal',
           click: (item) => {
             store.clear()
-            tray.destroy()
-            createTray()
+            reloadTray()
           }
         },
       ])
     },
     { type: 'separator' },
-    { label: 'Statistics', type: 'normal', click: function() {
+    { label: 'Sessions', type: 'normal', click: function() {
         if (core === null) {
           dialog.showMessageBox({message: 'Proxy is not running.'})
         } else {
@@ -1032,11 +1081,18 @@ function createTray() {
         app.quit()
       }
     }
-  ])
+  ]
+
+  mainMenus.push(...otherMenus)
 
   tray.setToolTip('Mellow')
-  tray.setContextMenu(contextMenu)
+  tray.setContextMenu(Menu.buildFromTemplate(mainMenus))
   setState(currentState)
+}
+
+function reloadTray() {
+  tray.destroy()
+  createTray()
 }
 
 function monitorRunningStatus() {
