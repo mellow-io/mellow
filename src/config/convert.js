@@ -1,5 +1,6 @@
 const util = require('util')
 const log = require('electron-log')
+const base64url = require('base64url')
 
 const sectionAlias = [
   ['RoutingRule', 'Rule'],
@@ -495,6 +496,43 @@ const vmess1Parser = (tag, params) => {
   return ob
 }
 
+const ssParser = (tag, params) => {
+  var ob = {
+    "protocol": "shadowsocks",
+    "tag": tag,
+    "settings": {
+      "servers": []
+    }
+  }
+  if (params.length > 1) {
+    return new Error('invalid vmess1 parameters')
+  }
+  const url = new URL(params[0].trim())
+  const userInfo = url.username
+  const address = url.hostname
+  const port = url.port
+  var method
+  var password
+  if (url.password.length == 0) {
+    const parts = base64url.decode(decodeURIComponent(userInfo)).split(':')
+    if (parts.length != 2) {
+      return new Error('invalid user info')
+    }
+    method = parts[0]
+    password = parts[1]
+  } else {
+    method = url.username
+    password = url.password
+  }
+  ob.settings.servers.push({
+    method: method,
+    password: password,
+    address: address,
+    port: parseInt(port)
+  })
+  return ob
+}
+
 const builtinParser = (tag, params) => {
   switch (params[0].trim()) {
     case 'freedom':
@@ -508,7 +546,8 @@ const builtinParser = (tag, params) => {
 
 const parsers = {
   builtin: builtinParser,
-  vmess1: vmess1Parser
+  vmess1: vmess1Parser,
+  ss: ssParser,
 }
 
 const constructOutbounds = (endpoint) => {

@@ -8,10 +8,12 @@ Reject, builtin, blackhole
 Dns-Out, builtin, dns
 Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true#WSS+Outbound
 Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp#TCP+Outbound
+Proxy-3, ss, ss://YWVzLTEyOC1nY206dGVzdA==@192.168.100.1:8888
+Proxy-4, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
 
 [EndpointGroup]
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
-MyGroup, Proxy-1:Proxy-2, latency, interval=300, timeout=6
+MyGroup, Proxy-1:Proxy-2:Proxy-3, latency, interval=300, timeout=6
 
 [Routing]
 domainStrategy = IPIfNonMatch
@@ -121,6 +123,34 @@ const json = `
       "streamSettings": {
         "network": "tcp"
       }
+    },
+    {
+      "tag": "Proxy-3",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "method": "aes-128-gcm",
+            "password": "test",
+            "address": "192.168.100.1",
+            "port": 8888
+          }
+        ]
+      }
+    },
+    {
+      "tag": "Proxy-4",
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "method": "aes-128-gcm",
+            "password": "pass",
+            "address": "192.168.100.1",
+            "port": 8888
+          }
+        ]
+      }
     }
   ],
   "routing": {
@@ -130,7 +160,8 @@ const json = `
         "tag": "MyGroup",
         "selector": [
           "Proxy-1",
-          "Proxy-2"
+          "Proxy-2",
+          "Proxy-3"
         ],
         "strategy": "latency",
         "interval": 300,

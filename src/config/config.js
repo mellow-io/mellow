@@ -6,10 +6,11 @@ Reject, builtin, blackhole
 Dns-Out, builtin, dns
 Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true
 Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp
+Proxy-3, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
 
 [EndpointGroup]
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
-MyGroup, Proxy-1:Proxy-2, latency, interval=300, timeout=6
+MyGroup, Proxy-1:Proxy-2:Proxy-3, latency, interval=300, timeout=6
 
 [Routing]
 domainStrategy = IPIfNonMatch
