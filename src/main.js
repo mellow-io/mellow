@@ -44,7 +44,7 @@ const schema = {
   },
   configUrl: {
     type: 'string',
-    default: 'https://www.example.org/cfg.json'
+    default: 'https://raw.githubusercontent.com/eycorsican/mellow/master/template/example.conf'
   },
   selectedConfig: {
     type: 'string',
@@ -912,6 +912,60 @@ function createTray() {
         fs.closeSync(f)
         reloadTray()
       }
+    }, {
+      type: 'separator'
+    }, {
+      label: 'Create From URL',
+      type: 'normal',
+      click: () => {
+        prompt({
+          title: 'Download Config',
+          label: 'Config URL:',
+          value: store.get('configUrl'),
+          inputAttrs: {
+              type: 'url'
+          }
+        })
+        .then((r) => {
+            if (r) {
+              opt = {
+                timeout: 15 * 1000
+              }
+              https.get(r, opt, (res) => {
+                if (res.statusCode != 200) {
+                  dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
+                  return
+                }
+                var body = ''
+                res.on('data', (data) => {
+                  body += data
+                })
+                res.on('end', () => {
+                  var filename
+                  if (body.toString().trim().startsWith('{')) {
+                    filename = getFormattedTime() + '.json'
+                  } else {
+                    filename = getFormattedTime() + '.conf'
+                  }
+                  fd = fs.openSync(path.join(configFolder, filename), 'w')
+                  fs.writeSync(fd, body)
+                  fs.closeSync(fd)
+                  store.set('configUrl', r)
+                  dialog.showMessageBox({ message: util.format('Config added as %s', filename) })
+                  reloadTray()
+                })
+                res.on('timeout', ()=> {
+                  dialog.showErrorBox('Error', 'HTTP GET timeout')
+                })
+              }).on('error', (err) => {
+                dialog.showErrorBox('Error', 'HTTP GET failed: ' + err)
+              })
+            }
+        })
+        .catch((err) => {
+          dialog.showErrorBox('Error', 'Failed to download config: ' + err)
+        })
+      }
     }])
   })
   mainMenus.push({
@@ -929,180 +983,107 @@ function createTray() {
 
   mainMenus.push({ type: 'separator' })
 
-    // { label: 'Config', type: 'submenu', submenu: Menu.buildFromTemplate([
-    //     { label: 'Edit', type: 'normal', click: function() {
-    //         try {
-    //           createConfigFileIfNotExists()
-    //         } catch (err) {
-    //           dialog.showErrorBox('Error', 'Failed to create file/folder: ' + err)
-    //         }
-    //         shell.openItem(configFile)
-    //       }
-    //     },
-    //     {
-    //       label: 'Download From URL',
-    //       type: 'normal',
-    //       click: () => {
-    //         prompt({
-    //           title: 'Download V2Ray Config',
-    //           label: 'V2Ray Config URL:',
-    //           value: store.get('configUrl'),
-    //           inputAttrs: {
-    //               type: 'url'
-    //           }
-    //         })
-    //         .then((r) => {
-    //             if (r) {
-    //               opt = {
-    //                 timeout: 15 * 1000
-    //               }
-    //               https.get(r, opt, (res) => {
-    //                 if (res.statusCode != 200) {
-    //                   dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
-    //                   return
-    //                 }
-    //                 var body = ''
-    //                 res.on('data', (data) => {
-    //                   body += data
-    //                 })
-    //                 res.on('end', () => {
-    //                   try {
-    //                     createConfigFileIfNotExists()
-    //                   } catch (err) {
-    //                     dialog.showErrorBox('Error', 'Failed to create file/folder: ' + err)
-    //                     return
-    //                   }
-
-    //                   fd = fs.openSync(configFile, 'w')
-    //                   fs.writeSync(fd, body)
-    //                   fs.closeSync(fd)
-
-    //                   store.set('configUrl', r)
-    //                   dialog.showMessageBox({message: 'Success.'})
-    //                 })
-    //                 res.on('timeout', ()=> {
-    //                   dialog.showErrorBox('Error', 'HTTP GET timeout')
-    //                 })
-    //               }).on('error', (err) => {
-    //                 dialog.showErrorBox('Error', 'HTTP GET failed: ' + err)
-    //               })
-    //             }
-    //         })
-    //         .catch((err) => {
-    //           dialog.showErrorBox('Error', 'Failed to download config: ' + err)
-    //         })
-    //       }
-    //     },
-    //     {
-    //       label: 'Open Folder',
-    //       type: 'normal',
-    //       click: () => { shell.openItem(configFolder) }
-    //     },
-    //   ])
-    // },
-
-    var otherMenus = [{
-      label: 'Preferences',
-      type: 'submenu',
-      submenu: Menu.buildFromTemplate([
-        {
-          label: 'Auto Launch',
-          type: 'checkbox',
-          click: (item) => {
-            store.set('autoLaunch', item.checked)
-            resetAutoLaunch()
+  var otherMenus = [{
+    label: 'Preferences',
+    type: 'submenu',
+    submenu: Menu.buildFromTemplate([
+      {
+        label: 'Auto Launch',
+        type: 'checkbox',
+        click: (item) => {
+          store.set('autoLaunch', item.checked)
+          resetAutoLaunch()
+        },
+        checked: store.get('autoLaunch')
+      },
+      {
+        label: 'Auto Connect',
+        type: 'checkbox',
+        click: (item) => { store.set('autoConnect', item.checked) },
+        checked: store.get('autoConnect')
+      },
+      {
+        label: 'Check Updates',
+        type: 'checkbox',
+        click: (item) => { store.set('checkUpdates', item.checked) },
+        checked: store.get('checkUpdates')
+      },
+      {
+        label: 'Log Level',
+        type: 'submenu',
+        submenu: Menu.buildFromTemplate([
+          {
+            label: 'debug',
+            type: 'radio',
+            click: () => { store.set('loglevel', 'debug') },
+            checked: store.get('loglevel') == 'debug'
           },
-          checked: store.get('autoLaunch')
-        },
-        {
-          label: 'Auto Connect',
-          type: 'checkbox',
-          click: (item) => { store.set('autoConnect', item.checked) },
-          checked: store.get('autoConnect')
-        },
-        {
-          label: 'Check Updates',
-          type: 'checkbox',
-          click: (item) => { store.set('checkUpdates', item.checked) },
-          checked: store.get('checkUpdates')
-        },
-        {
-          label: 'Log Level',
-          type: 'submenu',
-          submenu: Menu.buildFromTemplate([
-            {
-              label: 'debug',
-              type: 'radio',
-              click: () => { store.set('loglevel', 'debug') },
-              checked: store.get('loglevel') == 'debug'
-            },
-            {
-              label: 'info',
-              type: 'radio',
-              click: () => { store.set('loglevel', 'info') },
-              checked: store.get('loglevel') == 'info'
-            },
-            {
-              label: 'warn',
-              type: 'radio',
-              click: () => { store.set('loglevel', 'warn') },
-              checked: store.get('loglevel') == 'warn'
-            },
-            {
-              label: 'error',
-              type: 'radio',
-              click: () => { store.set('loglevel', 'error') },
-              checked: store.get('loglevel') == 'error'
-            },
-            {
-              label: 'none',
-              type: 'radio',
-              click: () => { store.set('loglevel', 'none') },
-              checked: store.get('loglevel') == 'none'
-            }
-          ])
-        },
-        { type: 'separator' },
-        {
-          label: 'Reset',
-          type: 'normal',
-          click: (item) => {
-            store.clear()
-            reloadTray()
+          {
+            label: 'info',
+            type: 'radio',
+            click: () => { store.set('loglevel', 'info') },
+            checked: store.get('loglevel') == 'info'
+          },
+          {
+            label: 'warn',
+            type: 'radio',
+            click: () => { store.set('loglevel', 'warn') },
+            checked: store.get('loglevel') == 'warn'
+          },
+          {
+            label: 'error',
+            type: 'radio',
+            click: () => { store.set('loglevel', 'error') },
+            checked: store.get('loglevel') == 'error'
+          },
+          {
+            label: 'none',
+            type: 'radio',
+            click: () => { store.set('loglevel', 'none') },
+            checked: store.get('loglevel') == 'none'
           }
-        },
-      ])
-    },
-    { type: 'separator' },
-    { label: 'Sessions', type: 'normal', click: function() {
-        if (core === null) {
-          dialog.showMessageBox({message: 'Proxy is not running.'})
-        } else {
-          shell.openExternal('http://localhost:6001/stats/session/plain')
+        ])
+      },
+      { type: 'separator' },
+      {
+        label: 'Reset',
+        type: 'normal',
+        click: (item) => {
+          store.clear()
+          reloadTray()
         }
-      }
-    },
-    {
-      label: 'Log',
-      type: 'normal',
-      click: () => { shell.openItem(logPath) }
-    },
-    { type: 'separator' },
-    { label: 'Check For Updates', type: 'normal', click: function() {
-        checkForUpdates(false)
-      }
-    },
-    { label: 'About', type: 'normal', click: function() {
-        dialog.showMessageBox({ message: util.format('Mellow (v%s)\n\n%s', app.getVersion(), 'https://github.com/eycorsican/Mellow') })
-      }
-    },
-    { type: 'separator' },
-    { label: 'Quit', type: 'normal', click: function() {
-        down()
-        app.quit()
+      },
+    ])
+  },
+  { type: 'separator' },
+  { label: 'Sessions', type: 'normal', click: function() {
+      if (core === null) {
+        dialog.showMessageBox({message: 'Proxy is not running.'})
+      } else {
+        shell.openExternal('http://localhost:6001/stats/session/plain')
       }
     }
-  ]
+  },
+  {
+    label: 'Log',
+    type: 'normal',
+    click: () => { shell.openItem(logPath) }
+  },
+  { type: 'separator' },
+  { label: 'Check For Updates', type: 'normal', click: function() {
+      checkForUpdates(false)
+    }
+  },
+  { label: 'About', type: 'normal', click: function() {
+      dialog.showMessageBox({ message: util.format('Mellow (v%s)\n\n%s', app.getVersion(), 'https://github.com/eycorsican/Mellow') })
+    }
+  },
+  { type: 'separator' },
+  { label: 'Quit', type: 'normal', click: function() {
+      down()
+      app.quit()
+    }
+  }]
 
   mainMenus.push(...otherMenus)
 
