@@ -23,6 +23,7 @@ domainStrategy = IPIfNonMatch
 DOMAIN-KEYWORD, geosite:category-ads-all, Reject
 IP-CIDR, 8.8.8.8/32, MyGroup
 GEOIP, cn, Direct
+GEOIP, private, Direct
 PORT, 123, Direct
 DOMAIN-FULL, a.google.com, MyGroup
 DOMAIN, b.google.com, MyGroup
@@ -193,7 +194,8 @@ const json = `
       {
         "type": "field",
         "ip": [
-          "geoip:cn"
+          "geoip:cn",
+          "geoip:private"
         ],
         "outboundTag": "Direct"
       },

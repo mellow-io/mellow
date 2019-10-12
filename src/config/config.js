@@ -22,6 +22,7 @@ IP-CIDR, 8.8.8.8/32, MyGroup
 IP-CIDR, 8.8.4.4/32, MyGroup
 DOMAIN-KEYWORD, geosite:cn, Direct
 GEOIP, cn, Direct
+GEOIP, private, Direct
 PORT, 123, Direct
 PROCESS-NAME, cloudmusic.exe, Direct
 PROCESS-NAME, NeteaseMusic, Direct
