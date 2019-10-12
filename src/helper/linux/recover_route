@@ -1,0 +1,10 @@
+#!/bin/sh
+
+CMD=$1
+ORIG_ST=$2
+ORIG_GW=$3
+
+"$CMD" rule del from $ORIG_ST table default
+"$CMD" route del default table default
+"$CMD" route del default table main
+"$CMD" route add default via $ORIG_GW table main

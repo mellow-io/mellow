@@ -1,10 +1,10 @@
 {
   "name": "mellow",
   "productName": "Mellow",
-  "version": "0.1.1",
-  "description": "Mellow",
-  "main": "main.js",
+  "version": "0.1.3",
+  "main": "src/main.js",
   "scripts": {
+    "test": "jest",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "distmac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder -m",
@@ -12,13 +12,10 @@
     "distlinux": "electron-builder -l",
     "dlgeo": "bash scripts/dl_mmdb.sh && bash scripts/dl_geosite.sh"
   },
-  "keywords": [
-    "proxy"
-  ],
-  "author": "Mellow",
   "devDependencies": {
     "electron": "^6.0.0",
-    "electron-builder": "^21.2.0"
+    "electron-builder": "^21.2.0",
+    "jest": "^24.9.0"
   },
   "dependencies": {
     "auto-launch": "^5.0.5",
@@ -26,18 +23,27 @@
     "electron-log": "^3.0.7",
     "electron-prompt": "^1.3.1",
     "electron-store": "^4.0.0",
+    "module-alias": "eycorsican/module-alias",
     "netmask": "^1.0.6",
     "semver": "^6.3.0",
-    "sudo-prompt": "^9.0.0"
+    "sudo-prompt": "eycorsican/sudo-prompt"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^@mellow(.*)$": "<rootDir>/src/$1"
+    }
+  },
+  "moduleAliases": {
+    "@mellow": "src"
   },
   "build": {
-    "appId": "com.mellow.mellow",
+    "appId": "org.mellow.mellow",
     "mac": {
-      "icon": "assets/icon.png",
+      "icon": "src/assets/icon.png",
       "extraResources": [
         {
-          "from": "helper/darwin",
-          "to": "helper",
+          "from": "src/helper/darwin",
+          "to": "src/helper",
           "filter": [
             "core",
             "install_helper",
@@ -45,17 +51,17 @@
             "route"
           ]
         },
-        "helper/geosite.dat",
-        "helper/geo.mmdb"
+        "src/helper/geosite.dat",
+        "src/helper/geo.mmdb"
       ]
     },
     "win": {
-      "icon": "assets/icon.png",
+      "icon": "src/assets/icon.png",
       "requestedExecutionLevel": "requireAdministrator",
       "extraResources": [
         {
-          "from": "helper/win32",
-          "to": "helper",
+          "from": "src/helper/win32",
+          "to": "src/helper",
           "filter": [
             "core.exe",
             "ensure_tap_device.bat",
@@ -65,23 +71,23 @@
           ]
         },
         {
-          "from": "helper/win32/tap-windows6",
-          "to": "helper/tap-windows6",
+          "from": "src/helper/win32/tap-windows6",
+          "to": "src/helper/tap-windows6",
           "filter": [
             "*"
           ]
         },
-        "helper/geosite.dat",
-        "helper/geo.mmdb"
+        "src/helper/geosite.dat",
+        "src/helper/geo.mmdb"
       ]
     },
     "linux": {
       "target": "AppImage",
-      "icon": "assets/icon.png",
+      "icon": "src/assets/icon.png",
       "extraResources": [
         {
-          "from": "helper/linux",
-          "to": "helper",
+          "from": "src/helper/linux",
+          "to": "src/helper",
           "filter": [
             "config_route",
             "recover_route",
@@ -91,8 +97,8 @@
             "ip"
           ]
         },
-        "helper/geosite.dat",
-        "helper/geo.mmdb"
+        "src/helper/geosite.dat",
+        "src/helper/geo.mmdb"
       ]
     }
   }
