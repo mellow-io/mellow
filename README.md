@@ -92,7 +92,7 @@ DOMAIN-KEYWORD, geosite:geolocation-!cn, Remote
 
 [DnsHost]
 ; domain = ip
-localhost = 127.0.0.1
+doubleclick.net = 127.0.0.1
 
 [Log]
 loglevel = warning
