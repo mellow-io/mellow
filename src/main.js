@@ -1056,6 +1056,11 @@ function createTray() {
     ])
   },
   { type: 'separator' },
+  {
+    label: 'Running Config',
+    type: 'normal',
+    click: () => { shell.openItem(runningConfig) }
+  },
   { label: 'Sessions', type: 'normal', click: function() {
       if (core === null) {
         dialog.showMessageBox({message: 'Proxy is not running.'})
