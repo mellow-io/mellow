@@ -546,25 +546,33 @@ async function recoverRoute() {
   }
 }
 
-function stopCore() {
-  if (core !== null) {
+function stopCoreWindows() {
+  return new Promise((resolve, reject) => {
     // We want a graceful shutdown for the core, but sending signals
     // not work on Windows, use TCP instead.
+    c = new net.Socket()
+    c.connect(coreRpcPort, '127.0.0.1', () => {
+      c.write('SIGINT')
+    })
+    c.on('data', (data) => {
+      if (data.toString() == 'OK') {
+        c.destroy()
+        core = null
+        resolve()
+      }
+    })
+    c.on('error', (err) => {
+      log.info('management RPC error:')
+      log.info(err)
+      reject()
+    })
+  })
+}
+
+async function stopCore() {
+  if (core !== null) {
     if (process.platform == 'win32') {
-      c = new net.Socket()
-      c.connect(coreRpcPort, '127.0.0.1', () => {
-        c.write('SIGINT')
-      })
-      c.on('data', (data) => {
-        if (data.toString() == 'OK') {
-          c.destroy()
-          core = null
-        }
-      })
-      c.on('error', (err) => {
-        log.info('management RPC error:')
-        log.info(err)
-      })
+      await stopCoreWindows()
     } else {
       core.kill('SIGTERM')
       core = null
@@ -661,7 +669,7 @@ async function down() {
   gw = getDefaultGateway()
 
   if (core) {
-    stopCore()
+    await stopCore()
   }
 
   // Recover default route only if current route is to tunGw.
@@ -813,8 +821,8 @@ function checkForUpdates(silent) {
   })
 }
 
-function reconnect() {
-  down()
+async function reconnect() {
+  await down()
   up()
 }
 
