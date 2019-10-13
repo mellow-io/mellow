@@ -327,12 +327,17 @@ async function startCore(callback) {
       const v2json = convert.constructJson(content)
       parsedConfig = JSON.stringify(v2json, null, 2)
     } catch(err) {
-      dialog.showErrorBox('Config Error', err)
+      dialog.showErrorBox('Error', 'Config error: ' +  err)
       return
     }
   } else if (selectedConfig.includes('.json')) {
-    const content = fs.readFileSync(selectedConfig, 'utf-8')
-    parsedConfig = JSON.stringify(JSON.parse(content), null, 2)
+    try {
+      const content = fs.readFileSync(selectedConfig, 'utf-8')
+      parsedConfig = content
+    } catch (err) {
+      dialog.showErrorBox('Error', 'Config error: ' + err)
+      return
+    }
   } else {
       dialog.showErrorBox('Config Error', 'Unknown config suffix')
       return
