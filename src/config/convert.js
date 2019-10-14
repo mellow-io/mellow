@@ -679,3 +679,19 @@ module.exports = {
   constructOutbounds,
   constructJson
 }
+
+if (typeof require !== 'undefined' && require.main === module) {
+  const readline = require('readline')
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+  })
+  var lines = []
+  rl.on('line', (line) => {
+    lines.push(line)
+  })
+  rl.on('close', () => {
+    console.log(JSON.stringify(constructJson(lines.join('\n')), null, 2))
+  })
+}

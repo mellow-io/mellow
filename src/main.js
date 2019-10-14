@@ -522,6 +522,7 @@ async function configRoute() {
   }
 
   setState(state.Connected)
+  reloadTray()
 }
 
 async function recoverRoute() {
@@ -687,6 +688,8 @@ async function down() {
   setState(state.Disconnected)
 
   log.info('Core downed.')
+
+  reloadTray()
 }
 
 // {gateway: '1.2.3.4', interface: 'en1'}
@@ -849,15 +852,15 @@ function createTray() {
   var mainMenus = []
   mainMenus = [
     ...mainMenus,
-    { label: 'Connect', type: 'normal', click: function() {
+    { label: 'Connect', type: 'normal', enabled: !isConnected(), click: function() {
         up()
       }
     },
-    { label: 'Disconnect', type: 'normal', click: function() {
+    { label: 'Disconnect', type: 'normal', enabled: isConnected(), click: function() {
         down()
       }
     },
-    { label: 'Reconnect', type: 'normal', click: function() {
+    { label: 'Reconnect', type: 'normal', enabled: isConnected(), click: function() {
         reconnect()
       }
     }
