@@ -51,6 +51,7 @@ Direct, builtin, freedom, domainStrategy=UseIP
 Reject, builtin, blackhole
 Dns-Out, builtin, dns
 Http-Out, builtin, http, address=192.168.100.1, port=1087, user=myuser, pass=mypass
+Socks-Out, builtin, socks, address=127.0.0.1, port=1080, user=myuser, pass=mypass
 Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true
 Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp
 Proxy-3, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
