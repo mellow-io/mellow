@@ -161,6 +161,7 @@ let running = false
 let helperVerified = false
 let coreNeedResume = false
 let tray = null
+let trayMenu = null
 let core = null
 let coreRpcPort = 6002
 let coreInterrupt = false
@@ -522,7 +523,10 @@ async function configRoute() {
   }
 
   setState(state.Connected)
-  reloadTray()
+  trayMenu.items[0].enabled = false
+  trayMenu.items[1].enabled = true
+  trayMenu.items[2].enabled = true
+  tray.setContextMenu(trayMenu)
 }
 
 async function recoverRoute() {
@@ -689,7 +693,10 @@ async function down() {
 
   log.info('Core downed.')
 
-  reloadTray()
+  trayMenu.items[0].enabled = true
+  trayMenu.items[1].enabled = false
+  trayMenu.items[2].enabled = false
+  tray.setContextMenu(trayMenu)
 }
 
 // {gateway: '1.2.3.4', interface: 'en1'}
@@ -846,9 +853,7 @@ function getFormattedTime() {
     return y + "-" + m + "-" + d + "-" + h + "-" + mi + "-" + s;
 }
 
-function createTray() {
-  tray = new Tray(trayIcon.off)
-
+function buildTrayMenu() {
   var mainMenus = []
   mainMenus = [
     ...mainMenus,
@@ -1100,8 +1105,14 @@ function createTray() {
 
   mainMenus.push(...otherMenus)
 
+  return mainMenus
+}
+
+function createTray() {
+  tray = new Tray(trayIcon.off)
+  trayMenu = Menu.buildFromTemplate(buildTrayMenu())
   tray.setToolTip('Mellow')
-  tray.setContextMenu(Menu.buildFromTemplate(mainMenus))
+  tray.setContextMenu(trayMenu)
   setState(currentState)
 }
 
