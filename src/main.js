@@ -505,6 +505,7 @@ async function configRoute() {
     switch (process.platform) {
       case 'darwin':
         execSync(util.format('"%s" delete default', routeCmd))
+        execSync(util.format('"%s" delete default -ifscope %s', routeCmd, origGwScope))
         execSync(util.format('"%s" add default %s', routeCmd, tunGw))
         execSync(util.format('"%s" add default %s -ifscope %s', routeCmd, origGw, origGwScope))
         break
