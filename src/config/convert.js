@@ -443,6 +443,58 @@ const blackholeOutboundParser = (tag, params) => {
   }
 }
 
+const httpOutboundParser = (tag, params) => {
+  var ob = {
+    "protocol": "http",
+    "tag": tag
+  }
+  var address = ''
+  var port = 0
+  var user = ''
+  var pass = ''
+  params.forEach((param) => {
+    const parts = param.trim().split('=')
+    if (parts.length != 2) {
+      return
+    }
+    switch (parts[0].trim()) {
+      case 'address':
+        address = parts[1].trim()
+        break
+      case 'port':
+        port = parseInt(parts[1].trim())
+        break
+      case 'user':
+        user = parts[1].trim()
+        break
+      case 'pass':
+        pass = parts[1].trim()
+        break
+    }
+  })
+  if (!ob.hasOwnProperty('settings')) {
+    ob.settings = {
+      servers: []
+    }
+  }
+  var server = {
+    address: address,
+    port: port,
+    users: []
+  }
+  if (user.length > 0 && pass.length > 0) {
+    server.users.push({
+      user: user,
+      pass: pass
+    })
+  }
+  if (server.users.length == 0) {
+    delete server.users
+  }
+  ob.settings.servers.push(server)
+  return ob
+}
+
 const dnsOutboundParser = (tag, params) => {
   return {
     "protocol": "dns",
@@ -551,6 +603,8 @@ const builtinParser = (tag, params) => {
       return blackholeOutboundParser(tag, params.slice(1, params.length))
     case 'dns':
       return dnsOutboundParser(tag, params.slice(1, params.length))
+    case 'http':
+      return httpOutboundParser(tag, params.slice(1, params.length))
   }
 }
 
