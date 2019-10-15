@@ -12,6 +12,7 @@ Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v
 Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp#TCP+Outbound
 Proxy-3, ss, ss://YWVzLTEyOC1nY206dGVzdA==@192.168.100.1:8888
 Proxy-4, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
+Proxy-5, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/h2?network=http&http.host=example.com%2Cexample1.com&tls=true&tls.allowinsecure=true
 
 [EndpointGroup]
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
@@ -189,6 +190,37 @@ const json = `
             "port": 8888
           }
         ]
+      }
+    },
+    {
+      "tag": "Proxy-5",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "users": [
+              {
+                "id": "75da2e14-4d08-480b-b3cb-0079a0c51275"
+              }
+            ],
+            "address": "example.com",
+            "port": 443
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "http",
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": true
+        },
+        "httpSettings": {
+          "path": "/h2",
+          "host": [
+            "example.com",
+            "example1.com"
+          ]
+        }
       }
     }
   ],
