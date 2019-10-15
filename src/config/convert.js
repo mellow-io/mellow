@@ -445,7 +445,7 @@ const blackholeOutboundParser = (tag, params) => {
 
 const httpAndSocksOutboundParser = (protocol, tag, params) => {
   var ob = {
-    protocol,
+    "protocol": protocol,
     "tag": tag
   }
   var address = ''
