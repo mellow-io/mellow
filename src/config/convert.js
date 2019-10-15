@@ -443,9 +443,9 @@ const blackholeOutboundParser = (tag, params) => {
   }
 }
 
-const httpOutboundParser = (tag, params) => {
+const httpAndSocksOutboundParser = (protocol, tag, params) => {
   var ob = {
-    "protocol": "http",
+    "protocol": protocol,
     "tag": tag
   }
   var address = ''
@@ -596,7 +596,7 @@ const ssParser = (tag, params) => {
 }
 
 const builtinParser = (tag, params) => {
-  switch (params[0].trim()) {
+  switch (protocol = params[0].trim()) {
     case 'freedom':
       return freedomOutboundParser(tag, params.slice(1, params.length))
     case 'blackhole':
@@ -604,7 +604,8 @@ const builtinParser = (tag, params) => {
     case 'dns':
       return dnsOutboundParser(tag, params.slice(1, params.length))
     case 'http':
-      return httpOutboundParser(tag, params.slice(1, params.length))
+    case 'socks':
+      return httpAndSocksOutboundParser(protocol, tag, params.slice(1, params.length))
   }
 }
 
