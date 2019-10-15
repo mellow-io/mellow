@@ -521,7 +521,10 @@ const vmess1Parser = (tag, params) => {
   const address = url.hostname
   const port = url.port
   const path = url.pathname
-  const query = url.search.substr(1)
+  const query = decodeURIComponent(url.search.substr(1))
+  const tlsSettings = {}
+  const wsSettings = {}
+  const httpSettings = {}
   ob.settings.vnext.push({
     users: [{
       "id": uuid
@@ -543,17 +546,58 @@ const vmess1Parser = (tag, params) => {
           ob.streamSettings.security = 'none'
         }
         break
-    }
-  })
-  if (path.length != 0) {
-    switch (ob.streamSettings.network) {
-      case 'ws':
-        if (!ob.streamSettings.hasOwnProperty('wsSettings')) {
-          ob.streamSettings.wsSettings = {}
+      case 'tls.allowinsecure':
+        if (qps[1] == "true") {
+          tlsSettings.allowInsecure = true
+        } else {
+          tlsSettings.allowInsecure = false
         }
-        ob.streamSettings.wsSettings.path = path
+        break
+      case 'tls.servername':
+        tlsSettings.serverName = qps[1]
+        break
+      case 'ws.host':
+        let host = qps[1].trim()
+        if (host.length != 0) {
+          wsSettings.host = host
+        }
+        break
+      case 'http.host':
+        let hosts = []
+        qps[1].trim().split(',').forEach((h) => {
+          if (h.trim().length != 0) {
+            hosts.push(h.trim())
+          }
+        })
+        if (hosts.length != 0) {
+          httpSettings.host = hosts
+        }
         break
     }
+  })
+  if (Object.keys(tlsSettings).length != 0) {
+    if (ob.streamSettings.security == 'tls') {
+      ob.streamSettings.tlsSettings = tlsSettings
+    }
+  }
+  switch (ob.streamSettings.network) {
+    case 'ws':
+      if (path.length != 0) {
+        wsSettings.path = path
+      }
+      if (Object.keys(wsSettings).length != 0) {
+        ob.streamSettings.wsSettings = wsSettings
+      }
+      break
+    case 'http':
+    case 'h2':
+      if (path.length != 0) {
+        httpSettings.path = path
+      }
+      if (Object.keys(httpSettings).length != 0) {
+        ob.streamSettings.httpSettings = httpSettings
+      }
+      break
   }
   return ob
 }
@@ -567,7 +611,7 @@ const ssParser = (tag, params) => {
     }
   }
   if (params.length > 1) {
-    return new Error('invalid vmess1 parameters')
+    return new Error('invalid shadowsocks parameters')
   }
   const url = new URL(params[0].trim())
   const userInfo = url.username
