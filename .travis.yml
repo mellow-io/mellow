@@ -16,6 +16,7 @@ install:
 
 script:
   - yarn dlgeo
+  - yarn test
   - yarn distmac
   - USE_HARD_LINKS=false yarn distwin
   - yarn distlinux
