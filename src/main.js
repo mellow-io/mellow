@@ -667,7 +667,13 @@ async function up() {
       startCore(configRoute)
       running = true
     } else {
-      configRoute()
+      // Core is running but the default gateway is not the tun interface,
+      // it's very likely network has been reseted due to network changes.
+      // And the original gateway is also very likely point to a different
+      // IP, we must restart the core and pass the correct send through address.
+      await stopCore()
+      startCore(configRoute)
+      running = true
     }
   }
 }
