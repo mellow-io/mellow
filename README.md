@@ -154,6 +154,8 @@ macOS 和 Linux 用户可能需要检查下系统 DNS 配置，勿用路由器�
 
 DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/%E6%BC%AB%E8%B0%88%E5%90%84%E7%A7%8D%E9%BB%91%E7%A7%91%E6%8A%80%E5%BC%8F-dns-%E6%8A%80%E6%9C%AF%E5%9C%A8%E4%BB%A3%E7%90%86%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8-62c50e58cbd0) 中介绍的没什么出入，默认使用 Sniffing 来处理 DNS 染污，建议再配置一下 DNS 分流，就是 conf 配置中的 DNS Hijack + DNS Outbound（Endpoint） + DNS Server + DNS Rule。
 
+如果启用 DNS 分流（DNS Hijack），Sessions 中的 DNS 请求并不是实际发出的 DNS 请求，这是被 Hijack 前记录下的，Hijack 后实际所发的 DNS 请求暂时没有记录。
+
 ### 关于 NAT 类型
 使用 SOCKS 或 Shadowsocks 协议的话支持 Full Cone NAT，注意服务器也要是支持 Full Cone NAT 的，如果要代理游戏，服务端可以考虑用 shadowsocks-libev、go-shadowsocks2 等。
 
