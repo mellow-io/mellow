@@ -641,7 +641,7 @@ async function up() {
     log.info('Original gateway is ' + origGw)
     st = null
     for (i = 0; i < 5; i++) {
-      st = findOriginalSendThrough()
+      st = findOriginalSendThrough(gw)
       if (st === null) {
         await delay(1000)
         log.info('Retrying to find the original send through address.')
@@ -716,19 +716,20 @@ function getDefaultGateway() {
 }
 
 // {address: '192.168.1.1', interface: 'en0'}
-function findOriginalSendThrough() {
-  if (origGw === null) {
+function findOriginalSendThrough(gw) {
+  if (gw === null) {
     return null
   }
 
   ifaces = os.networkInterfaces()
-  for (k in ifaces) {
-    for (let addrObj of ifaces[k]) {
-      cidr = addrObj['cidr']
-      if (addrObj['family'] == 'IPv4' && !addrObj['internal'] && cidr !== undefined) {
-        block = new Netmask(cidr)
-        if (block.contains(origGw)) {
-          return {address: addrObj['address'], interface: k}
+  for (name in ifaces) {
+    if (name == gw['interface']) {
+      for (let info of ifaces[name]) {
+        if (info['family'] == 'IPv4' && !info['internal'] && info['cidr'] !== undefined) {
+          block = new Netmask(info['cidr'])
+          if (block.contains(gw['gateway'])) {
+            return {address: info['address'], interface: name}
+          }
         }
       }
     }
