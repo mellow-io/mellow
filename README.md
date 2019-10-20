@@ -1,5 +1,5 @@
 # Mellow
-Mellow 是一个可以基于规则进行全局透明代理的 V2Ray 客户端，支持 Windows、macOS 和 Linux。
+Mellow 是一个可以基于规则进行全局透明代理的 V2Ray 客户端，支持 Windows、macOS 和 Linux。并且可以配置成路由器透明代理或代理网关。
 
 ## 下载
 
@@ -205,6 +205,31 @@ sudo sysctl -w net.ipv4.ip_forward=1
 
 ```sh
 cat config.conf | node src/config/convert.js > config.json
+```
+
+### 可以运行在路由器上做透明代理吗？
+可以的：
+
+1. 首先保证路由器处于一个正常状态，它本身也可以正常访问网络。（在路由器的 ssh shell 里可以 ping 通外网）
+2. 把所需文件下载下来放到路由器上某一个目录里面，有些文件需要改下名字，具体参考上面的 “在 Linux 上运行”。（你需要到 Releases 页面找对应系统架构的 core）
+3. 同一目录里，创建一个叫 `cfg.json` 的 V2Ray 配置文件，不需要有 Inbound，其它配置按正常来，但建议参考 Mellow 所推荐的配置方式。
+4. 检查路由器的系统 DNS，保证不是 127.0.0.1 或任何私有地址，如果有必要，自己填两个上去。（/etc/resolv.conf）
+5. 然后运行 `run_linux.sh`（不是后台运行，你需要保留这个窗口）。
+6. 然后用 `ip addr show` 查看 TUN 接口的名字，比如是 `tun1`，那么运行下面这条 iptables 命令就 OK 啦：
+
+```sh
+iptables -I FORWARD -o tun1 -j ACCEPT
+```
+
+已知问题：
+
+- 在我测试的路由器系统（很老的一个 OpenWrt）上，TLS 因为证书问题不能使用，如果出现这个问题，V2Ray 会输出相关错误日志，如果遇到这个问题，那所有 outbound 和负载均衡组里的 `probeTarget` 都是不能用 TLS 的。
+- 因为 `Sessions` 的地址是 127.0.0.1，所以如果想查看请求记录，可以做下 SSH Port Forwarding：
+
+```sh
+# 在本地机器上运行，192.168.1.1 是路由器地址，
+# 然后访问：http://localhost:6002/stats/session/plain
+ssh -NL 6002:localhost:6001 root@192.168.1.1
 ```
 
 ## JSON 配置的扩展功能说明

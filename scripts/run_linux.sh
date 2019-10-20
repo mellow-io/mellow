@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ `id -u` -ne 0 ]; then
+  echo 'Must run as root!'
+  exit 1
+fi
+
 CONFIG_FILE=cfg.json
 TUN_GW=10.255.0.1
 TUN_ADDR=10.255.0.2
@@ -21,25 +26,25 @@ config_route() {
   # Give some time for Mellow to open the TUN device.
   sleep 3
   echo 'Setting up routing table...'
-  sudo ip route del default table main
-  sudo ip route add default via $TUN_GW table main
-  sudo ip route add default via $ORIG_GW dev $ORIG_ST_SCOPE table default
-  sudo ip rule add from $ORIG_ST table default
+  ip route del default table main
+  ip route add default via $TUN_GW table main
+  ip route add default via $ORIG_GW dev $ORIG_ST_SCOPE table default
+  ip rule add from $ORIG_ST table default
 }
 
 recover_route() {
   echo 'Recovering routing table...'
-  sudo ip rule del from $ORIG_ST table default
-  sudo ip route del default table default
-  sudo ip route del default table main
-  sudo ip route add default via $ORIG_GW table main
+  ip rule del from $ORIG_ST table default
+  ip route del default table default
+  ip route del default table main
+  ip route add default via $ORIG_GW table main
 }
 
 # Configure the routing table in the background.
 config_route &
 
 # Run Mellow in blocking mode.
-sudo ./core \
+./core \
 -tunAddr $TUN_ADDR \
 -tunGw $TUN_GW \
 -tunMask $TUN_MASK \
