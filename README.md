@@ -221,10 +221,7 @@ cat config.conf | node src/config/convert.js > config.json
 iptables -I FORWARD -o tun1 -j ACCEPT
 ```
 
-已知问题：
-
-- 在我测试的路由器系统（很老的一个 OpenWrt）上，TLS 因为证书问题不能使用，如果出现这个问题，V2Ray 会输出相关错误日志，如果遇到这个问题，那所有 outbound 和负载均衡组里的 `probeTarget` 都是不能用 TLS 的。
-- 因为 `Sessions` 的地址是 127.0.0.1，所以如果想查看请求记录，可以做下 SSH Port Forwarding：
+因为 `Sessions` 的地址是 127.0.0.1，所以如果想查看请求记录，可以做下 SSH Port Forwarding：
 
 ```sh
 # 在本地机器上运行，192.168.1.1 是路由器地址，
