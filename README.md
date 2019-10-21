@@ -170,6 +170,9 @@ JSON 配置文件中不需要有 Inbound，但也可以自行配置 Inbound 作�
 ### 关于 GUI
 目前没有任何计划做成 UI 配置的方式。
 
+### 关于 Windows 上的卸载
+目前需要手动卸载 Mellow 安装的网络适配器。从本仓库中获取 [tapinstall.exe](src/helper/win32/tap-windows6/tapinstall.exe)，在同目录下执行：`tapinstall.exe remove tap0901` 即可。
+
 ## FAQ
 
 ### 为什么在 Sessions 中有些请求显示进程名称为 `unknown process`？
