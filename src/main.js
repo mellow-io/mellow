@@ -402,7 +402,18 @@ async function startCore(callback) {
       break
   }
 
-  core = spawn(coreCmd, params)
+  let env = Object.create(process.env)
+
+  switch (process.platform) {
+    case 'linux':
+    case 'darwin':
+      env.LANG = 'en_US.UTF-8'
+      break
+    case 'win32':
+      break
+  }
+
+  core = spawn(coreCmd, params, { env: env })
   core.stdout.on('data', (data) => {
     log.info(data.toString())
   })
