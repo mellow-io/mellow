@@ -44,7 +44,7 @@ const schema = {
   },
   configUrl: {
     type: 'string',
-    default: 'https://raw.githubusercontent.com/eycorsican/mellow/master/template/example.conf'
+    default: 'https://raw.githubusercontent.com/mellow-io/mellow/master/template/example.conf'
   },
   selectedConfig: {
     type: 'string',
@@ -825,7 +825,7 @@ function checkForUpdates(silent) {
       'User-Agent': 'Mellow'
     }
   }
-  https.get('https://api.github.com/repos/eycorsican/Mellow/releases/latest', opt, (res) => {
+  https.get('https://api.github.com/repos/mellow-io/mellow/releases/latest', opt, (res) => {
     if (res.statusCode != 200) {
       if (!silent) {
         dialog.showErrorBox('Error', 'HTTP GET failed, status: ' + res.statusCode)
@@ -1112,7 +1112,7 @@ function buildTrayMenu() {
     }
   },
   { label: 'About', type: 'normal', click: function() {
-      dialog.showMessageBox({ message: util.format('Mellow (v%s)\n\n%s', app.getVersion(), 'https://github.com/eycorsican/Mellow') })
+      dialog.showMessageBox({ message: util.format('Mellow (v%s)\n\n%s', app.getVersion(), 'https://github.com/mellow-io/mellow') })
     }
   },
   { type: 'separator' },
