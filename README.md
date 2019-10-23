@@ -1,14 +1,14 @@
 # Mellow
-Mellow 是一个可以基于规则进行全局透明代理的 V2Ray 客户端，支持 Windows、macOS 和 Linux。并且可以配置成路由器透明代理或代理网关。
+Mellow 是一个基于规则的全局透明代理工具，可以运行在 Windows、macOS 和 Linux 上，也可以配置成路由器透明代理或代理网关，支持 SOCKS、HTTP、Shadowsocks、VMess 等多种代理协议。
 
 ## 下载
 
-https://github.com/eycorsican/Mellow/releases
+https://github.com/mellow-io/mellow/releases
 
 ## 特性
 Mellow 可对所有应用、所有请求进行透明代理，不需要为每个应用或程序单独设置代理，它所支持的特性可以概括为：
 
-|     | [Mellow](https://github.com/eycorsican/Mellow) | [Surge Mac](https://nssurge.com/) | [SSTap](https://www.sockscap64.com/sstap-enjoy-gaming-enjoy-sstap/) | [Proxifier](https://www.proxifier.com/) | [Outline](https://getoutline.org/) |
+|     | [Mellow](https://github.com/mellow-io/mellow) | [Surge Mac](https://nssurge.com/) | [SSTap](https://www.sockscap64.com/sstap-enjoy-gaming-enjoy-sstap/) | [Proxifier](https://www.proxifier.com/) | [Outline](https://getoutline.org/) |
 |:---:|:------:|:---------:|:-----:|:---------:|:-------:|
 | Windows 支持 | ✅ | | ✅ | ✅ | ✅ |
 | macOS 支持 | ✅ | ✅ | | ✅ | ✅ |
@@ -30,8 +30,6 @@ Mellow 可对所有应用、所有请求进行透明代理，不需要为每个�
 | Shadowsocks | ✅ | ✅ | ✅ | | ✅ |
 | VMess | ✅ | | | |
 | WebSocket, mKCP, QUIC, HTTP/2 传输| ✅ | | | |
-
-其它 V2Ray 所支持的功能也都是支持的，上面并没有全部列出。
 
 ## 配置
 
@@ -59,7 +57,7 @@ Proxy-4, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/h
 
 [EndpointGroup]
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
-MyGroup, Proxy-1:Proxy-2:Proxy-3, latency, interval=300, timeout=6
+Group-1, Proxy-1:Proxy-2:Proxy-3, latency, interval=300, timeout=6
 
 [Routing]
 domainStrategy = IPIfNonMatch
@@ -68,22 +66,23 @@ domainStrategy = IPIfNonMatch
 ; type, filter, endpoint tag or enpoint group tag
 DOMAIN-KEYWORD, geosite:category-ads-all, Reject
 IP-CIDR, 223.5.5.5/32, Direct
-IP-CIDR, 8.8.8.8/32, MyGroup
-IP-CIDR, 8.8.4.4/32, MyGroup
+IP-CIDR, 8.8.8.8/32, Group-1
+IP-CIDR, 8.8.4.4/32, Group-1
 PROCESS-NAME, cloudmusic.exe, Direct
 PROCESS-NAME, NeteaseMusic, Direct
 GEOIP, cn, Direct
 GEOIP, private, Direct
 PORT, 123, Direct
 DOMAIN-KEYWORD, geosite:cn, Direct
-DOMAIN, www.google.com, MyGroup
-DOMAIN-FULL, www.google.com, MyGroup
-DOMAIN-SUFFIX, google.com, MyGroup
-FINAL, MyGroup
+DOMAIN, www.google.com, Group-1
+DOMAIN-FULL, www.google.com, Group-1
+DOMAIN-SUFFIX, google.com, Group-1
+FINAL, Group-1
 
 [Dns]
 ; hijack = dns endpoint tag
 hijack = Dns-Out
+; cliengIp = ip
 clientIp = 114.114.114.114
 
 [DnsServer]
@@ -115,7 +114,7 @@ loglevel = warning
 yarn dlgeo
 
 # 开发运行
-yarn start
+yarn && yarn start
 
 # 构建 macOS 安装文件
 yarn && yarn distmac
@@ -179,7 +178,7 @@ JSON 配置文件中不需要有 Inbound，但也可以自行配置 Inbound 作�
 
 ### 可以在 Linux 上以命令行方式运行吗？
 
-可以的，只需要把 [这](https://github.com/eycorsican/Mellow/blob/master/src/helper/linux/core) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/eycorsican/Mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。
+可以的，只需要把 [这](https://github.com/mellow-io/mellow/blob/master/src/helper/linux/core) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/mellow-io/mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。
 
 ### 可以用作网关吗？
 
@@ -211,7 +210,7 @@ cat config.conf | node src/config/convert.js > config.json
 可以的：
 
 1. 首先保证路由器处于一个正常状态，它本身也可以正常访问网络。（在路由器的 ssh shell 里可以 ping 通外网）
-2. 把所需文件下载下来放到路由器上某一个目录里面，有些文件需要改下名字，具体参考上面的 “在 Linux 上运行”。（你需要到 Releases 页面找对应系统架构的 core）
+2. 把所需文件下载下来放到路由器上某一个目录里面，有些文件需要改下名字，具体参考上面的 “在 Linux 上运行”。（你需要到 [Releases](https://github.com/mellow-io/mellow/releases/tag/v0.1.6) 页面找对应系统架构的 core）
 3. 同一目录里，创建一个叫 `cfg.json` 的 V2Ray 配置文件，不需要有 Inbound，其它配置按正常来，但建议参考 Mellow 所推荐的配置方式。
 4. 检查路由器的系统 DNS，保证不是 127.0.0.1 或任何私有地址，如果有必要，自己填两个上去。（/etc/resolv.conf）
 5. 然后运行 `run_linux.sh`（不是后台运行，你需要保留这个窗口）。
