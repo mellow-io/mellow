@@ -1,5 +1,6 @@
 geo.mmdb
 geosite.dat
+fakedns.cache
 /dist
 
 # General

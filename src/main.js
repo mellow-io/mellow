@@ -50,6 +50,14 @@ const schema = {
     type: 'string',
     default: ''
   },
+  sniffing: {
+    type: 'boolean',
+    default: true
+  },
+  fakeDns: {
+    type: 'boolean',
+    default: false
+  }
 }
 const store = new Store({name: 'preference', schema: schema})
 
@@ -401,6 +409,16 @@ async function startCore(callback) {
         '-vconfig', runningConfig
       ]
       break
+  }
+
+  if (store.get('sniffing')) {
+    params.push(...['-sniffingType', 'http,tls'])
+  } else {
+    params.push(...['-sniffingType', 'none'])
+  }
+
+  if (store.get('fakeDns')) {
+    params.push('-fakeDns')
   }
 
   let env = Object.create(process.env)
@@ -1075,6 +1093,25 @@ function buildTrayMenu() {
             click: () => { store.set('loglevel', 'none') },
             checked: store.get('loglevel') == 'none'
           }
+        ])
+      },
+      { type: 'separator' },
+      {
+        label: 'Advanced',
+        type: 'submenu',
+        submenu: Menu.buildFromTemplate([
+          {
+            label: 'Domain Sniffing',
+            type: 'checkbox',
+            click: (item) => { store.set('sniffing', item.checked) },
+            checked: store.get('sniffing')
+          },
+          {
+            label: 'Fake DNS',
+            type: 'checkbox',
+            click: (item) => { store.set('fakeDns', item.checked) },
+            checked: store.get('fakeDns')
+          },
         ])
       },
       { type: 'separator' },
