@@ -110,20 +110,26 @@ loglevel = warning
 建议在 macOS 或者 Linux 上进行开发或构建，如果想在 Windows 上开发，那可能需要手动下载一下依赖数据（因为是用 curl 来下载）。
 
 ```sh
-# 下载依赖数据
+git clone --depth 1 https://github.com/mellow-io/mellow.git
+cd mellow
+
+# 安装依赖
+yarn
+
+# 下载数据文件：geosite.dat, geo.mmdb
 yarn dlgeo
 
-# 开发运行
-yarn && yarn start
+# 运行
+yarn start
 
 # 构建 macOS 安装文件
-yarn && yarn distmac
+yarn distmac
 
 # 构建 Windows 安装文件
-yarn && yarn distwin
+yarn distwin
 
 # 构建 Linux 安装文件
-yarn && yarn distlinux
+yarn distlinux
 ```
 
 ## 一些说明
@@ -219,6 +225,19 @@ cat config.conf | node src/config/convert.js > config.json
 ```sh
 iptables -I FORWARD -o tun1 -j ACCEPT
 ```
+
+在典型 OpenWrt 系统上流量**大概可能**是这么走的：
+```
+// 局域网其它设备的流量
+wlan0/eth0 -> br-lan -> FORWARD (iptables) -> tun1 -> tun2socks (Mellow) -> ROUTING -> pppoe-wan
+```
+
+```
+// 运行在路由器上的进程的流量（比如 dnsmasq）
+local process -> ROUTING -> tun1 -> tun2socks (Mellow) -> ROUTING -> pppoe-wan
+```
+
+上面提到系统 DNS (/etc/resolv.conf) 中不能是 127.0.0.1、search lan、localhost 之类的原因是，假如路由器本地跑的是 dnsmasq 作 DNS 服务器，那么如果系统 DNS 是 127.0.0.1，Mellow 发的某些 DNS 请求就会给到 dnsmasq，而从上面第二个过程来看，dnsmasq (local process) 发出去的流量又会再次给到 Mellow，这其中如果处理不好就可能会出现死循环，这种情况一般都比较难处理，所以最直接的方法就是不让 DNS 流量经过本地的 dnsmasq。
 
 因为 `Sessions` 的地址是 127.0.0.1，所以如果想查看请求记录，可以做下 SSH Port Forwarding：
 
