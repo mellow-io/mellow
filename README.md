@@ -49,11 +49,11 @@ Direct, builtin, freedom, domainStrategy=UseIP
 Reject, builtin, blackhole
 Dns-Out, builtin, dns
 Http-Out, builtin, http, address=192.168.100.1, port=1087, user=myuser, pass=mypass
-Socks-Out, builtin, socks, address=127.0.0.1, port=1080, user=myuser, pass=mypass
-Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true
+Socks-Out, builtin, socks, address=192.168.100.1, port=1080, user=myuser, pass=mypass
+Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/path?network=ws&tls=true&ws.host=example.com
 Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp
 Proxy-3, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
-Proxy-4, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/h2?network=http&http.host=example.com%2Cexample1.com&tls=true&tls.allowinsecure=true
+Proxy-4, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/path?network=http&http.host=example.com%2Cexample1.com&tls=true&tls.allowinsecure=true
 
 [EndpointGroup]
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
@@ -216,7 +216,7 @@ cat config.conf | node src/config/convert.js > config.json
 可以的：
 
 1. 首先保证路由器处于一个正常状态，它本身也可以正常访问网络。（在路由器的 ssh shell 里可以 ping 通外网）
-2. 把所需文件下载下来放到路由器上某一个目录里面，有些文件需要改下名字，具体参考上面的 “在 Linux 上运行”。（你需要到 [Releases](https://github.com/mellow-io/mellow/releases/tag/v0.1.6) 页面找对应系统架构的 core）
+2. 把所需文件下载下来放到路由器上某一个目录里面，有些文件需要改下名字，具体参考上面的 “在 Linux 上运行”。（你需要到 [Releases](https://github.com/mellow-io/mellow/releases/tag/v0.1.9) 页面找对应系统架构的 core）
 3. 同一目录里，创建一个叫 `cfg.json` 的 V2Ray 配置文件，不需要有 Inbound，其它配置按正常来，但建议参考 Mellow 所推荐的配置方式。
 4. 检查路由器的系统 DNS，保证不是 127.0.0.1 或任何私有地址，如果有必要，自己填两个上去。（/etc/resolv.conf）
 5. 然后运行 `run_linux.sh`（不是后台运行，你需要保留这个窗口）。
