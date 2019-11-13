@@ -559,7 +559,7 @@ const vmess1Parser = (tag, params) => {
       case 'ws.host':
         let host = qps[1].trim()
         if (host.length != 0) {
-          wsSettings.host = host
+          wsSettings.headers = { Host: host }
         }
         break
       case 'http.host':
