@@ -1045,7 +1045,8 @@ function buildTrayMenu() {
           store.set('autoLaunch', item.checked)
           resetAutoLaunch()
         },
-        checked: store.get('autoLaunch')
+        checked: store.get('autoLaunch'),
+        visible: process.platform != 'win32'
       },
       {
         label: 'Auto Connect',
