@@ -7,12 +7,39 @@ https://github.com/mellow-io/mellow/releases
 
 ## 配置
 
-### 全局代理
+### 全局代理配置
 
 ```ini
 [Endpoint]
 MyProxyServer, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
 Dns-Out, dns
+
+[RoutingRule]
+FINAL, MyProxyServer
+
+[Dns]
+hijack = Dns-Out
+
+[DnsServer]
+8.8.8.8
+8.8.4.4
+```
+
+### 简单配置
+
+绕过 cn 和 private。
+
+```ini
+[Endpoint]
+MyProxyServer, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
+Direct, builtin, freedom, domainStrategy=UseIP
+Dns-Out, dns
+
+[RoutingRule]
+DOMAIN-KEYWORD, geosite:cn, Direct
+GEOIP, cn, Direct
+GEOIP, private, Direct
+FINAL, MyProxyServer
 
 [Dns]
 hijack = Dns-Out
@@ -284,7 +311,7 @@ ssh -NL 6002:localhost:6001 root@192.168.1.1
 
 ### QoS 设置
 
-在 Outbound 的 streamSettings 中设置。
+在 Outbound 的 streamSettings 中设置，仅支持 macOS 和 Linux。
 
 ```json
 "streamSettings": {
