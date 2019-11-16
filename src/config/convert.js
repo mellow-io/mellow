@@ -235,6 +235,9 @@ const constructRouting = (routingConf, strategy, balancer, rule, dns) => {
       case 'PROCESS-NAME':
         filters.push(filter)
         break
+      case 'NETWORK':
+        filters.push(filter.split(':').join(','))
+        break
       case 'FINAL':
         if (routing.domainStrategy == 'IPIfNonMatch' || routing.domainStrategy == 'IPOnDemand') {
           filters.push('0.0.0.0/0')
@@ -419,28 +422,45 @@ const freedomOutboundParser = (tag, params) => {
     "protocol": "freedom",
     "tag": tag
   }
+  let settings = {}
   params.forEach((param) => {
-    const parts = param.trim().split('=')
-    if (parts.length != 2) {
+    const kv = param.trim().split('=')
+    if (kv.length != 2) {
       return
     }
-    if (!ob.hasOwnProperty('settings')) {
-      ob.settings = {}
-    }
-    switch (parts[0].trim()) {
+    switch (kv[0].trim()) {
       case 'domainStrategy':
-        ob.settings.domainStrategy = parts[1].trim()
+        settings.domainStrategy = kv[1].trim()
         break
     }
   })
+  if (Object.keys(settings).length != 0) {
+    ob.settings = settings
+  }
   return ob
 }
 
 const blackholeOutboundParser = (tag, params) => {
-  return {
+  let ob = {
     "protocol": "blackhole",
     "tag": tag
   }
+  let settings = {}
+  params.forEach((param) => {
+    const kv = param.trim().split('=')
+    if (kv.length != 2) {
+      return
+    }
+    switch (kv[0].trim()) {
+      case 'type':
+        settings.response = { type: kv[1].trim() }
+        break
+    }
+  })
+  if (Object.keys(settings).length != 0) {
+    ob.settings = settings
+  }
+  return ob
 }
 
 const httpAndSocksOutboundParser = (protocol, tag, params) => {
@@ -496,11 +516,33 @@ const httpAndSocksOutboundParser = (protocol, tag, params) => {
 }
 
 const dnsOutboundParser = (tag, params) => {
-  return {
+  let ob = {
     "protocol": "dns",
     "tag": tag,
     "settings": {}
   }
+  let settings = {}
+  params.forEach((param) => {
+    const kv = param.trim().split('=')
+    if (kv.length != 2) {
+      return
+    }
+    switch (kv[0].trim()) {
+      case 'network':
+        ob.settings.network = kv[1].trim()
+        break
+      case 'address':
+        ob.settings.address = kv[1].trim()
+        break
+      case 'port':
+        ob.settings.port = parseInt(kv[1].trim())
+        break
+    }
+  })
+  if (Object.keys(settings).length != 0) {
+    ob.settings = settings
+  }
+  return ob
 }
 
 const vmess1Parser = (tag, params) => {
@@ -510,8 +552,7 @@ const vmess1Parser = (tag, params) => {
     "settings": {
       "vnext": []
     },
-    "streamSettings": {
-    }
+    "streamSettings": {}
   }
   if (params.length > 1) {
     return new Error('invalid vmess1 parameters')
@@ -525,6 +566,11 @@ const vmess1Parser = (tag, params) => {
   const tlsSettings = {}
   const wsSettings = {}
   const httpSettings = {}
+  const kcpSettings = {}
+  const quicSettings = {}
+  const mux = {}
+  const sockopt = {}
+  let header = null
   ob.settings.vnext.push({
     users: [{
       "id": uuid
@@ -534,37 +580,37 @@ const vmess1Parser = (tag, params) => {
   })
   const parts = query.split('&')
   parts.forEach((q) => {
-    const qps = q.split('=')
-    switch (qps[0]) {
+    const kv = q.split('=')
+    switch (kv[0]) {
       case 'network':
-        ob.streamSettings.network = qps[1]
+        ob.streamSettings.network = kv[1]
         break
       case 'tls':
-        if (qps[1] == 'true') {
+        if (kv[1] == 'true') {
           ob.streamSettings.security = 'tls'
         } else {
           ob.streamSettings.security = 'none'
         }
         break
       case 'tls.allowinsecure':
-        if (qps[1] == "true") {
+        if (kv[1] == 'true') {
           tlsSettings.allowInsecure = true
         } else {
           tlsSettings.allowInsecure = false
         }
         break
       case 'tls.servername':
-        tlsSettings.serverName = qps[1]
+        tlsSettings.serverName = kv[1]
         break
       case 'ws.host':
-        let host = qps[1].trim()
+        let host = kv[1].trim()
         if (host.length != 0) {
           wsSettings.headers = { Host: host }
         }
         break
       case 'http.host':
         let hosts = []
-        qps[1].trim().split(',').forEach((h) => {
+        kv[1].trim().split(',').forEach((h) => {
           if (h.trim().length != 0) {
             hosts.push(h.trim())
           }
@@ -573,12 +619,64 @@ const vmess1Parser = (tag, params) => {
           httpSettings.host = hosts
         }
         break
+      case 'mux':
+        var v = parseInt(kv[1].trim())
+        if (v > 0) {
+          mux.enabled = true
+          mux.concurrency = v
+        }
+        break
+      case 'sockopt.tos':
+        var v = parseInt(kv[1].trim())
+        if (v > 0) {
+          sockopt.tos = v
+        }
+        break
+      case 'sockopt.tcpfastopen':
+        if (kv[1] == 'true') {
+          sockopt.tcpFastOpen = true
+        } else {
+          sockopt.tcpFastOpen = false
+        }
+        break
+      // header type for both kcp and quic (maybe tcp later, not planed)
+      case 'header':
+        header = kv[1]
+        break
+      case 'kcp.mtu':
+        kcpSettings.mtu = parseInt(kv[1].trim())
+        break
+      case 'kcp.tti':
+        kcpSettings.tti = parseInt(kv[1].trim())
+        break
+      case 'kcp.uplinkcapacity':
+        kcpSettings.uplinkCapacity = parseInt(kv[1].trim())
+        break
+      case 'kcp.downlinkcapacity':
+        kcpSettings.downlinkCapacity = parseInt(kv[1].trim())
+        break
+      case 'kcp.congestion':
+        if (kv[1] == 'true') {
+          kcpSettings.congestion = true
+        } else {
+          kcpSettings.congestion = false
+        }
+        break
+      case 'quic.security':
+        quicSettings.security = kv[1].trim()
+        break
+      case 'quic.key':
+        quicSettings.key = kv[1]
+        break
     }
   })
   if (Object.keys(tlsSettings).length != 0) {
     if (ob.streamSettings.security == 'tls') {
       ob.streamSettings.tlsSettings = tlsSettings
     }
+  }
+  if (Object.keys(sockopt).length != 0) {
+    ob.streamSettings.sockopt = sockopt
   }
   switch (ob.streamSettings.network) {
     case 'ws':
@@ -598,6 +696,26 @@ const vmess1Parser = (tag, params) => {
         ob.streamSettings.httpSettings = httpSettings
       }
       break
+    case 'kcp':
+    case 'mkcp':
+      if (header) {
+        kcpSettings.header = { type: header }
+      }
+      if (Object.keys(kcpSettings).length != 0) {
+        ob.streamSettings.kcpSettings = kcpSettings
+      }
+      break
+    case 'quic':
+      if (header) {
+        quicSettings.header = { type: header }
+      }
+      if (Object.keys(quicSettings).length != 0) {
+        ob.streamSettings.quicSettings = quicSettings
+      }
+      break
+  }
+  if (Object.keys(mux).length != 0) {
+    ob.mux = mux
   }
   return ob
 }

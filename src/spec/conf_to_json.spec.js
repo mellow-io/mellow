@@ -3,17 +3,42 @@ const convert = require('@mellow/config/convert')
 const conf = `
 [Endpoint]
 ; tag, parser, parser-specific params...
+
 Direct, builtin, freedom, domainStrategy=UseIP
-Reject, builtin, blackhole
-Dns-Out, builtin, dns
+
+Reject, builtin, blackhole, type=http
+
+Dns-Out, builtin, dns, network=tcp, address=1.1.1.1, port=53
+
+; http
 Http-Out, builtin, http, address=192.168.100.1, port=1087, user=myuser, pass=mypass
+
+; socks5
 Socks-Out, builtin, socks, address=127.0.0.1, port=1080, user=myuser, pass=mypass
-Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true#WSS+Outbound
-Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp#TCP+Outbound
+
+; ws + tls
+Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true&ws.host=example.com
+
+; tcp, mux enabled, concurrency 8
+Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp&mux=8
+
+; shadowsocks SIP002
 Proxy-3, ss, ss://YWVzLTEyOC1nY206dGVzdA==@192.168.100.1:8888
+
+; shadowsocks SIP002-without-base64-encode
 Proxy-4, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
+
+; h2, multiple hosts
 Proxy-5, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/h2?network=http&http.host=example.com%2Cexample1.com&tls=true&tls.allowinsecure=true
-Proxy-6, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true&ws.host=example.com
+
+; tcp + tls
+Proxy-6, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp&tls=true&tls.servername=example.com&tls.allowinsecure=true&sockopt.tcpfastopen=true
+
+; kcp
+Proxy-7, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=kcp&kcp.mtu=1350&kcp.tti=20&kcp.uplinkcapacity=1&kcp.downlinkcapacity=2&kcp.congestion=false&header=none&sockopt.tos=184
+
+; quic
+Proxy-8, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=quic&quic.security=none&quic.key=&header=none&tls=false&sockopt.tos=184
 
 [EndpointGroup]
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
@@ -35,6 +60,7 @@ DOMAIN-SUFFIX, c.google.com, MyGroup
 DOMAIN-KEYWORD, geosite:cn, Direct
 DOMAIN-KEYWORD, bilibili, Direct
 PROCESS-NAME, git, Proxy-2
+NETWORK, udp:tcp, Direct
 FINAL, Direct
 
 [Dns]
@@ -78,12 +104,21 @@ const json = `
     },
     {
       "tag": "Reject",
-      "protocol": "blackhole"
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "http"
+        }
+      }
     },
     {
       "tag": "Dns-Out",
       "protocol": "dns",
-      "settings": {}
+      "settings": {
+        "network": "tcp",
+        "address": "1.1.1.1",
+        "port": 53
+      }
     },
     {
       "tag": "Http-Out",
@@ -141,7 +176,10 @@ const json = `
         "network": "ws",
         "security": "tls",
         "wsSettings": {
-          "path": "\/v2"
+          "path": "\/v2",
+          "headers": {
+            "Host": "example.com"
+          }
         }
       }
     },
@@ -163,6 +201,10 @@ const json = `
       },
       "streamSettings": {
         "network": "tcp"
+      },
+      "mux": {
+        "enabled": true,
+        "concurrency": 8
       }
     },
     {
@@ -236,18 +278,83 @@ const json = `
               }
             ],
             "address": "example.com",
-            "port": 443
+            "port": 10025
           }
         ]
       },
       "streamSettings": {
-        "network": "ws",
+        "network": "tcp",
         "security": "tls",
-        "wsSettings": {
-          "path": "\/v2",
-          "headers": {
-            "Host": "example.com"
+        "tlsSettings": {
+          "serverName": "example.com",
+          "allowInsecure": true
+        },
+        "sockopt": {
+          "tcpFastOpen": true
+        }
+      }
+    },
+    {
+      "tag": "Proxy-7",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "users": [
+              {
+                "id": "75da2e14-4d08-480b-b3cb-0079a0c51275"
+              }
+            ],
+            "address": "example.com",
+            "port": 10025
           }
+        ]
+      },
+      "streamSettings": {
+        "network": "kcp",
+        "kcpSettings": {
+          "mtu": 1350,
+          "tti": 20,
+          "uplinkCapacity": 1,
+          "downlinkCapacity": 2,
+          "congestion": false,
+          "header": {
+            "type": "none"
+          }
+        },
+        "sockopt": {
+          "tos": 184
+        }
+      }
+    },
+    {
+      "tag": "Proxy-8",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "users": [
+              {
+                "id": "75da2e14-4d08-480b-b3cb-0079a0c51275"
+              }
+            ],
+            "address": "example.com",
+            "port": 10025
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "quic",
+        "security": "none",
+        "quicSettings": {
+          "security": "none",
+          "key": "",
+          "header": {
+            "type": "none"
+          }
+        },
+        "sockopt": {
+          "tos": 184
         }
       }
     }
@@ -325,6 +432,11 @@ const json = `
           "git"
         ],
         "outboundTag": "Proxy-2"
+      },
+      {
+        "type": "field",
+        "network": "udp,tcp",
+        "outboundTag": "Direct"
       },
       {
         "type": "field",
