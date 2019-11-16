@@ -5,32 +5,6 @@ Mellow 是一个基于规则的全局透明代理工具，可以运行在 Window
 
 https://github.com/mellow-io/mellow/releases
 
-## 特性
-Mellow 可对所有应用、所有请求进行透明代理，不需要为每个应用或程序单独设置代理，它所支持的特性可以概括为：
-
-|     | [Mellow](https://github.com/mellow-io/mellow) | [Surge Mac](https://nssurge.com/) | [SSTap](https://www.sockscap64.com/sstap-enjoy-gaming-enjoy-sstap/) | [Proxifier](https://www.proxifier.com/) | [Outline](https://getoutline.org/) |
-|:---:|:------:|:---------:|:-----:|:---------:|:-------:|
-| Windows 支持 | ✅ | | ✅ | ✅ | ✅ |
-| macOS 支持 | ✅ | ✅ | | ✅ | ✅ |
-| Linux 支持 | ✅ | | | | ✅ |
-| 透明代理 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| TCP 代理 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| UDP 代理 | ✅ | ✅ | ✅ | | ✅ |
-| IP 规则 | ✅ | ✅ | ✅ | ✅ |
-| 域名规则 | ✅ | ✅ | | ✅ |
-| 应用进程规则 | ✅ | ✅ | | ✅ |
-| 端口规则 | ✅ | ✅ | | ✅ |
-| MitM | | ✅ | | |
-| URL Rewrite | | ✅ | | |
-| 多个代理出口 | ✅ | ✅ | | ✅ |
-| 负载均衡 | ✅ | ✅ | | |
-| DNS 分流 | ✅ | ✅ | | |
-| SOCKS | ✅ | ✅ | ✅ | ✅ |
-| HTTP | ✅ | ✅ | | ✅ | |
-| Shadowsocks | ✅ | ✅ | ✅ | | ✅ |
-| VMess | ✅ | | | |
-| WebSocket, mKCP, QUIC, HTTP/2 传输| ✅ | | | |
-
 ## 配置
 
 ### 全局代理
@@ -38,6 +12,14 @@ Mellow 可对所有应用、所有请求进行透明代理，不需要为每个�
 ```ini
 [Endpoint]
 MyProxyServer, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
+Dns-Out, dns
+
+[Dns]
+hijack = Dns-Out
+
+[DnsServer]
+localhost
+8.8.8.8
 ```
 
 ### 更多配置
@@ -54,6 +36,8 @@ Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/p
 Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp
 Proxy-3, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
 Proxy-4, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/path?network=http&http.host=example.com%2Cexample1.com&tls=true&tls.allowinsecure=true
+Proxy-7, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=kcp&kcp.mtu=1350&kcp.tti=20&kcp.uplinkcapacity=1&kcp.downlinkcapacity=2&kcp.congestion=false&header=none&sockopt.tos=184
+Proxy-8, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=quic&quic.security=none&quic.key=&header=none&tls=false&sockopt.tos=184
 
 [EndpointGroup]
 ; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
@@ -104,6 +88,8 @@ doubleclick.net = 127.0.0.1
 [Log]
 loglevel = warning
 ```
+
+更详细的 conf 配置，以及所对应的 JSON 配置可以[查看这里](https://github.com/mellow-io/mellow/blob/master/src/spec/conf_to_json.spec.js)。
 
 ## 开发运行和构建
 
@@ -293,5 +279,17 @@ ssh -NL 6002:localhost:6001 root@192.168.1.1
             "outboundTag": "proxy"
         }
     ]
+}
+```
+
+### QoS 设置
+
+在 Outbound 的 streamSettings 中设置。
+
+```json
+"streamSettings": {
+  "sockopt": {
+    "tos": 184
+  }
 }
 ```
