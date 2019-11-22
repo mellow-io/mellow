@@ -12,7 +12,7 @@ https://github.com/mellow-io/mellow/releases
 ```ini
 [Endpoint]
 MyProxyServer, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
-Dns-Out, dns
+Dns-Out, builtin, dns
 
 [RoutingRule]
 FINAL, MyProxyServer
@@ -33,7 +33,7 @@ hijack = Dns-Out
 [Endpoint]
 MyProxyServer, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
 Direct, builtin, freedom, domainStrategy=UseIP
-Dns-Out, dns
+Dns-Out, builtin, dns
 
 [RoutingRule]
 DOMAIN-KEYWORD, geosite:cn, Direct
