@@ -57,6 +57,10 @@ const schema = {
   fakeDns: {
     type: 'boolean',
     default: false
+  },
+  systemDns: {
+    type: 'string',
+    default: '223.5.5.5,1.1.1.1'
   }
 }
 const store = new Store({name: 'preference', schema: schema})
@@ -399,7 +403,7 @@ async function startCore(callback) {
         '-tunAddr', tunAddr,
         '-tunMask', tunMask,
         '-tunGw', tunGw,
-        '-tunDns', '223.5.5.5,1.1.1.1',
+        '-tunDns', store.get('systemDns'),
         '-rpcPort', coreRpcPort.toString(),
         '-sendThrough', sendThrough,
         '-proxyType', 'v2ray',
@@ -1101,6 +1105,27 @@ function buildTrayMenu() {
         label: 'Advanced',
         type: 'submenu',
         submenu: Menu.buildFromTemplate([
+          {
+            label: 'Set System DNS',
+            type: 'normal',
+            click: (item) => {
+              prompt({
+                title: 'Set System DNS Resolvers',
+                label: 'Comma-separated list:',
+                value: store.get('systemDns'),
+                inputAttrs: {
+                    type: 'text'
+                }
+              })
+              .then((r) => {
+                if (r) {
+                  // remove all whitespaces before store
+                  store.set('systemDns', r.replace(/\s/g,''))
+                }
+              })
+            },
+            visible: process.platform == 'win32'
+          },
           {
             label: 'Domain Sniffing',
             type: 'checkbox',

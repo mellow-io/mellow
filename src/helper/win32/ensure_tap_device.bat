@@ -152,6 +152,10 @@ netsh interface set interface "%DEVICE_NAME%" admin=enabled
 ::   echo Could not configure TAP device secondary DNS. >&2
 ::   exit /b 1
 :: )
+
+echo Set TAP adapter metric to 2.
+netsh interface ip set interface %DEVICE_NAME% metric=2
+
 echo TAP network device added successfully.
 
 exit /b 0
