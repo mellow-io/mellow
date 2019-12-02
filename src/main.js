@@ -1175,6 +1175,10 @@ function buildTrayMenu() {
       checkForUpdates(false)
     }
   },
+  { label: 'Help', type: 'normal', click: function() {
+      shell.openExternal('https://github.com/mellow-io/mellow')
+    }
+  },
   { label: 'About', type: 'normal', click: function() {
       dialog.showMessageBox({ message: util.format('Mellow (v%s)\n\n%s', app.getVersion(), 'https://github.com/mellow-io/mellow') })
     }

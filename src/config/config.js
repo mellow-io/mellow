@@ -1,135 +1,100 @@
 exports.confTemplate = `[Endpoint]
-; tag, parser, parser-specific params...
+Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/path?network=ws&tls=true&ws.host=example.com
 Direct, builtin, freedom, domainStrategy=UseIP
-Reject, builtin, blackhole
 Dns-Out, builtin, dns
-Proxy-1, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:443/v2?network=ws&tls=true
-Proxy-2, vmess1, vmess1://75da2e14-4d08-480b-b3cb-0079a0c51275@example.com:10025?network=tcp
-Proxy-3, ss, ss://aes-128-gcm:pass@192.168.100.1:8888
-
-[EndpointGroup]
-; tag, colon-seperated list of selectors or endpoint tags, strategy, strategy-specific params...
-MyGroup, Proxy-1:Proxy-2:Proxy-3, latency, interval=300, timeout=6
-
-[Routing]
-domainStrategy = IPIfNonMatch
 
 [RoutingRule]
-; type, filter, endpoint tag or enpoint group tag
-DOMAIN-KEYWORD, geosite:category-ads-all, Reject
-IP-CIDR, 223.5.5.5/32, Direct
-IP-CIDR, 8.8.8.8/32, MyGroup
-IP-CIDR, 8.8.4.4/32, MyGroup
 DOMAIN-KEYWORD, geosite:cn, Direct
 GEOIP, cn, Direct
 GEOIP, private, Direct
-PORT, 123, Direct
-PROCESS-NAME, cloudmusic.exe, Direct
-PROCESS-NAME, NeteaseMusic, Direct
-FINAL, MyGroup
+FINAL, Proxy-1
 
 [Dns]
-; hijack = dns endpoint tag
 hijack = Dns-Out
-clientIp = 114.114.114.114
 
 [DnsServer]
-; address, port, tag
 localhost
-223.5.5.5
-8.8.8.8, 53, Remote
-8.8.4.4
-
-[DnsRule]
-; type, filter, dns server tag
-DOMAIN-KEYWORD, geosite:geolocation-!cn, Remote
-
-[DnsHost]
-; domain = ip
-doubleclick.net = 127.0.0.1
-
-[Log]
-loglevel = warning`
+8.8.8.8`
 
 exports.jsonTemplate = `{
-    "log": {
-        "loglevel": "warning"
-    },
-    "outbounds": [
-        {
-            "protocol": "vmess",
-            "settings": {
-                "vnext": [
-                    {
-                        "users": [
-                            {
-                                "id": "d2953280-9eb3-451d-aef6-283cd79ba62c",
-                                "alterId": 4
-                            }
-                        ],
-                        "address": "yourserver.com",
-                        "port": 10086
-                    }
-                ]
-            },
-            "tag": "proxy"
-        },
-        {
-            "protocol": "freedom",
-            "settings": {
-              "domainStrategy": "UseIP"
-            },
-            "tag": "direct"
+  "dns": {
+    "servers": [
+      "localhost",
+      "8.8.8.8"
+    ]
+  },
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "tag": "Proxy-1",
+      "settings": {
+        "vnext": [
+          {
+            "users": [
+              {
+                "id": "75da2e14-4d08-480b-b3cb-0079a0c51275"
+              }
+            ],
+            "address": "example.com",
+            "port": 443
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "wsSettings": {
+          "headers": {
+            "Host": "example.com"
+          },
+          "path": "/path"
         }
-    ],
-    "dns": {
-        "servers": [
-            {
-                "address": "8.8.8.8",
-                "port": 53
-            },
-            {
-                "address": "223.5.5.5",
-                "port": 53,
-                "domains": [
-                    "geosite:cn"
-                ]
-            }
-        ]
+      }
     },
-    "routing": {
-        "domainStrategy": "IPIfNonMatch",
-        "rules": [
-            {
-                "ip": [
-                    "8.8.8.8/32"
-                ],
-                "type": "field",
-                "outboundTag": "proxy"
-            },
-            {
-                "type": "field",
-                "domain": [
-                    "geosite:cn"
-                ],
-                "outboundTag": "direct"
-            },
-            {
-                "type": "field",
-                "ip": [
-                    "geoip:cn",
-                    "geoip:private"
-                ],
-                "outboundTag": "direct"
-            },
-            {
-                "ip": [
-                    "0.0.0.0/0",
-                    "::/0"
-                ],
-                "type": "field",
-                "outboundTag": "proxy"
-            }
-        ]
+    {
+      "protocol": "freedom",
+      "tag": "Direct",
+      "settings": {
+        "domainStrategy": "UseIP"
+      }
+    },
+    {
+      "protocol": "dns",
+      "tag": "Dns-Out",
+      "settings": {}
     }
+  ],
+  "routing": {
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "Dns-Out",
+        "inboundTag": [
+          "tun2socks"
+        ],
+        "network": "udp",
+        "port": 53
+      },
+      {
+        "type": "field",
+        "outboundTag": "Direct",
+        "domain": [
+          "geosite:cn"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "Direct",
+        "ip": [
+          "geoip:cn",
+          "geoip:private"
+        ]
+      },
+      {
+        "type": "field",
+        "outboundTag": "Proxy-1",
+        "network": "tcp,udp"
+      }
+    ]
+  }
 }`
