@@ -864,7 +864,7 @@ function checkForUpdates(silent) {
       latestVer = semver.clean(obj['tag_name'])
       ver = app.getVersion()
       if (ver != latestVer) {
-        dialog.showMessageBox({ message: util.format('A new version (%s) is available.\n\nRelease Notes:\n%s\n\nDownload: %s', latestVer, obj['body'], obj['html_url']) })
+        dialog.showMessageBox({ message: util.format('A new version (%s) is available.\n\n\nRelease Notes:\n\n%s\n\n\nDownload:\n\n%s', latestVer, obj['body'], obj['html_url']) })
       } else {
         if (!silent) {
           dialog.showMessageBox({ message: 'You are up-to-date!' })
