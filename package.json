@@ -51,6 +51,10 @@
             "route"
           ]
         },
+        {
+          "from": "src/helper/darwin/trojan",
+          "to": "src/helper/trojan"
+        },
         "src/helper/geosite.dat",
         "src/helper/geo.mmdb"
       ]
@@ -69,6 +73,10 @@
             "recover_route.bat",
             "tap-windows6"
           ]
+        },
+        {
+          "from": "src/helper/win32/trojan",
+          "to": "src/helper/trojan"
         },
         {
           "from": "src/helper/win32/tap-windows6",
@@ -96,6 +104,10 @@
             "md5sum",
             "ip"
           ]
+        },
+        {
+          "from": "src/helper/linux/trojan",
+          "to": "src/helper/trojan"
         },
         "src/helper/geosite.dat",
         "src/helper/geo.mmdb"
