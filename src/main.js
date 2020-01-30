@@ -153,6 +153,7 @@ handleLagecyConfigFile()
 var md5Cmd
 var routeCmd
 var coreCmd
+var trojanCmd
 switch(process.platform) {
   case 'linux':
     md5Cmd = path.join(helperInstallPath, 'md5sum')
@@ -166,6 +167,7 @@ switch(process.platform) {
     break
   case 'win32':
     coreCmd = path.join(helperResourcePath, 'core.exe')
+    trojanCmd = path.join(helperResourcePath, 'trojan', 'trojan.exe')
     break
 }
 
@@ -325,6 +327,65 @@ function checkHelper() {
   return true
 }
 
+const trojanProcessors = []
+
+function startTrojan() {
+  const content = fs.readFileSync(runningConfig, 'utf-8')
+  const ob = JSON.parse(content)
+  if (!ob.outbounds) {
+    return false
+  }
+  for (const outbound of ob.outbounds) {
+    if (outbound.trojan) {
+      const trojanConfig = JSON.stringify(outbound.trojan, null, 2)
+      const trojanConfigFileName = outbound.trojan.remote_addr + '.' + Math.random() + '.json'
+      const trojanConfigFilePath = path.join(os.tmpdir(), trojanConfigFileName)
+      fs.writeFileSync(trojanConfigFilePath, trojanConfig)
+      let env = Object.create(process.env)
+      switch (process.platform) {
+        case 'linux':
+        case 'darwin':
+          env.LANG = 'en_US.UTF-8'
+          break
+        case 'win32':
+          break
+      }
+    
+      trojan = spawn(trojanCmd, ['-c', trojanConfigFilePath], { env: env })
+      trojan.stdout.on('data', (data) => {
+        log.info(data.toString())
+      })
+      trojan.stderr.on('data', (data) => {
+        log.info(data.toString())
+      })
+      trojan.on('close', (code, signal) => {
+        log.info('Trojan stopped, code', code, 'signal' , signal)
+      })
+      trojan.on('error', (err) => {
+        log.info('Trojan errored.')
+        trojan = null
+        log.info(err)
+      })
+      log.info('Trojan started with config file: ' + trojanConfigFilePath)
+      trojanProcessors.push(trojan)
+    }
+  }
+}
+
+function stopTrojan() {
+  for (const trojanProcessor of trojanProcessors) {
+    if (trojanProcessor !== null) {
+      if (process.platform == 'win32') {
+        spawn('taskkill', ['/pid', trojanProcessor.pid, '/f', '/t'])
+      } else {
+        trojanProcessor.kill('SIGTERM')
+        trojanProcessor = null
+      }
+    }
+  }
+  trojanProcessors.length = 0
+}
+
 async function startCore(callback) {
   coreInterrupt = false
 
@@ -365,6 +426,8 @@ async function startCore(callback) {
     dialog.showErrorBox('Config Error', 'Parsing config failed')
     return
   }
+
+  startTrojan()
 
   if (process.platform == 'win32') {
     log.info('Ensuring tap device sets up correctly.')
@@ -622,6 +685,7 @@ async function stopCore() {
       core.kill('SIGTERM')
       core = null
     }
+    stopTrojan()
   }
   setState(state.Disconnected)
 }

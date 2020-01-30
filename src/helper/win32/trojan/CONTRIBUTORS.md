@@ -1,0 +1,35 @@
+# Contributors
+
+- [a-wing](https://github.com/a-wing)
+    - Add Debian build instructions in the documentation.
+- [felixonmars](https://github.com/felixonmars)
+    - Fix incorrect systemd service path in the documentation.
+- [ffftwo](https://github.com/ffftwo)
+    - Throw an exception when `run_type` is wrong.
+- [GreaterFire](https://github.com/GreaterFire)
+    - Author of this project.
+- [JonathanHouten](https://github.com/JonathanHouten)
+    - Fix a parameter type error in the `CertOpenSystemStore` call.
+- [KCCat](https://github.com/KCCat)
+    - Fix an ambiguity in the documentation.
+- [klzgrad](https://github.com/klzgrad)
+    - Add Linux smoke test.
+- [WeidiDeng](https://github.com/WeidiDeng)
+    - Fix incorrect Debian dependency in the documentation.
+- [wongsyrone](https://github.com/wongsyrone)
+    - Add conditional MySQL compilation.
+    - Remove `SSL_CTX_set_ecdh_auto(native_context, 1)` call in new versions of OpenSSL.
+    - Fix a typo in the documentation.
+    - Add a functionality to log received signals.
+    - Fix a bug that causes trojan to crash if the connection is terminated before a session is established.
+    - Add android log facility.
+    - Refer to `basic_stream_socket` instead of `basic_socket` in SSL sockets.
+    - Cancel async tasks when stopping the service.
+    - Fix fd leak.
+    - Print OpenSSL compile-time version and build flags.
+    - Optimize APIs and other clean-ups.
+- [xsm1997](https://github.com/xsm1997)
+    - Add `SO_REUSEPORT` support.
+    - Add TLS1.3 ciphersuites support.
+- [zhangsan946](https://github.com/zhangsan946)
+    - Add macOS keychain support.

@@ -771,10 +771,75 @@ const builtinParser = (tag, params) => {
   }
 }
 
+var trojanLocalPortMapping = {}
+
+const trojanParser = (tag, params) => {
+  if (params.length > 1) {
+    return new Error('invalid trojan parameters')
+  }
+  const urlString = params[0].trim()
+  var localPort = 1080
+  if (trojanLocalPortMapping[urlString]) {
+    localPort = trojanLocalPortMapping[urlString]
+  } else {
+    const trojanLocalPorts = []
+    for (const _urlString in trojanLocalPortMapping) {
+      trojanLocalPorts.push(trojanLocalPortMapping[_urlString])
+    }
+
+    if (trojanLocalPorts.length) {
+      localPort = Math.max.apply(null, trojanLocalPorts) + 1
+    }
+
+    trojanLocalPortMapping[urlString] = localPort
+  }
+  const url = new URL(urlString)
+  const password = url.username
+  const address = url.hostname
+  const port = url.port ? parseInt(url.port) : 443
+  const trojanOb = {
+    run_type: "client",
+    local_addr: "127.0.0.1",
+    local_port: localPort,
+    remote_addr: address,
+    remote_port: port,
+    password: [
+      password
+    ],
+    log_level: 1,
+    ssl: {
+      verify: true,
+      verify_hostname: true,
+      cert: "",
+      cipher: "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA",
+      cipher_tls13: "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+      sni: "",
+      alpn: [
+        "h2",
+        "http/1.1"
+      ],
+      reuse_session: true,
+      session_ticket: false,
+      curves: ""
+    },
+    tcp: {
+      no_delay: true,
+      keep_alive: true,
+      reuse_port: false,
+      fast_open: false,
+      fast_open_qlen: 20
+    }
+  }
+  const ob = builtinParser(tag, ["socks", "address=127.0.0.1", "port=" + localPort])
+  ob.trojan = trojanOb
+  return ob
+}
+
 const parsers = {
   builtin: builtinParser,
   vmess1: vmess1Parser,
   ss: ssParser,
+  trojan: trojanParser,
 }
 
 const constructOutbounds = (endpoint) => {
@@ -795,15 +860,31 @@ const constructOutbounds = (endpoint) => {
       log.warn('parser not found: ', parser)
     }
   })
+  trojanLocalPortMapping = {}
   return outbounds
 }
 
 const constructJson = (conf) => {
+  const endpoint = getLinesBySection(conf, 'Endpoint')
+  const outbounds = constructOutbounds(endpoint)
+
   const routingDomainStrategy = getLinesBySection(conf, 'RoutingDomainStrategy')
   const routingConf = getLinesBySection(conf, 'Routing')
   const balancerRule = getLinesBySection(conf, 'EndpointGroup')
   const routingRule = getLinesBySection(conf, 'RoutingRule')
   const dnsConf = getLinesBySection(conf, 'Dns')
+
+  for (const outbound of outbounds) {
+    if (outbound.trojan) {
+      if (process.platform == 'win32') {
+        routingRule.unshift('PROCESS-NAME, trojan.exe, Direct')
+      } else {
+        routingRule.unshift('PROCESS-NAME, trojan, Direct')
+      }
+      break;
+    }
+  }
+
   const routing = constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf)
 
   const dnsServer = getLinesBySection(conf, 'DnsServer')
@@ -814,9 +895,6 @@ const constructJson = (conf) => {
 
   const logLines = getLinesBySection(conf, 'Log')
   const log = constructLog(logLines)
-
-  const endpoint = getLinesBySection(conf, 'Endpoint')
-  const outbounds = constructOutbounds(endpoint)
 
   var o = {
     log: log,
