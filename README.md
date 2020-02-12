@@ -5,6 +5,12 @@ Mellow 是一个基于规则的全局透明代理工具，可以运行在 Window
 
 https://github.com/mellow-io/mellow/releases
 
+### Homebrew 安装 (适用于 MacOS)
+
+```
+brew cask install mellow
+```
+
 ## 配置
 
 ### 全局代理配置
