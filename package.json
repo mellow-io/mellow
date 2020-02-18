@@ -1,6 +1,6 @@
 {
   "name": "Mellow",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "main": "src/main.js",
   "scripts": {
     "test": "jest",
@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "electron": "^6.0.0",
-    "electron-builder": "^21.2.0",
+    "electron-builder": "^22.3.2",
     "jest": "^24.9.0"
   },
   "dependencies": {
@@ -39,7 +39,7 @@
   "build": {
     "appId": "org.mellow.mellow",
     "mac": {
-      "icon": "src/assets/icon.png",
+      "icon": "src/assets/icon-mac.icns",
       "extraResources": [
         {
           "from": "src/helper/darwin",
@@ -56,7 +56,7 @@
       ]
     },
     "win": {
-      "icon": "src/assets/icon.png",
+      "icon": "src/assets/icon-win.ico",
       "requestedExecutionLevel": "requireAdministrator",
       "extraResources": [
         {
@@ -83,7 +83,7 @@
     },
     "linux": {
       "target": "AppImage",
-      "icon": "src/assets/icon.png",
+      "icon": "src/assets/icon-linux.png",
       "extraResources": [
         {
           "from": "src/helper/linux",
