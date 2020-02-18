@@ -215,7 +215,7 @@ const trayIcon = {
           return path.join(__dirname, 'assets/tray-on-icon.png')
         }
       case 'win32':
-        return path.join(__dirname, 'assets/tray-on-icon-win.ico')
+        return path.join(__dirname, 'assets/icon-win.ico')
     }
   },
   get off() {
@@ -867,7 +867,7 @@ function checkForUpdates(silent) {
       obj = JSON.parse(body)
       latestVer = semver.clean(obj['tag_name'])
       ver = app.getVersion()
-      if (ver != latestVer) {
+      if (ver < latestVer) {
         dialog.showMessageBox({ message: util.format('A new version (%s) is available.\n\n\nRelease Notes:\n\n%s\n\n\nDownload:\n\n%s', latestVer, obj['body'], obj['html_url']) })
       } else {
         if (!silent) {
@@ -1208,8 +1208,9 @@ function createTray() {
 }
 
 function reloadTray() {
-  tray.destroy()
-  createTray()
+  trayMenu = Menu.buildFromTemplate(buildTrayMenu())
+  tray.setContextMenu(trayMenu)
+  setState(currentState)
 }
 
 function monitorRunningStatus() {
