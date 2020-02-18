@@ -6,7 +6,7 @@ node_js:
 os:
   - osx
 
-osx_image: xcode9.3
+osx_image: xcode11.3
 
 cache:
   yarn: true
