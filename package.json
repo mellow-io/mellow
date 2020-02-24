@@ -12,8 +12,8 @@
     "dlgeo": "bash scripts/dl_mmdb.sh && bash scripts/dl_geosite.sh"
   },
   "devDependencies": {
-    "electron": "^6.0.0",
-    "electron-builder": "^21.2.0",
+    "electron": "^8.0.1",
+    "electron-builder": "^22.3.2",
     "jest": "^24.9.0"
   },
   "dependencies": {
@@ -55,8 +55,8 @@
         },
         "src/helper/geosite.dat",
         "src/helper/geo.mmdb",
-		"src/locales/en/translation.json",
-		"src/locales/zh/translation.json"
+        "src/locales/en/translation.json",
+        "src/locales/zh/translation.json"
       ]
     },
     "win": {
@@ -83,8 +83,8 @@
         },
         "src/helper/geosite.dat",
         "src/helper/geo.mmdb",
-		"src/locales/en/translation.json",
-		"src/locales/zh/translation.json"
+        "src/locales/en/translation.json",
+        "src/locales/zh/translation.json"
       ]
     },
     "linux": {
@@ -105,8 +105,8 @@
         },
         "src/helper/geosite.dat",
         "src/helper/geo.mmdb",
-		"src/locales/en/translation.json",
-		"src/locales/zh/translation.json"
+        "src/locales/en/translation.json",
+        "src/locales/zh/translation.json"
       ]
     }
   }
