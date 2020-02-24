@@ -1,11 +1,13 @@
 # Mellow
 Mellow 是一个基于规则的全局透明代理工具，可以运行在 Windows、macOS 和 Linux 上，也可以配置成路由器透明代理或代理网关，支持 SOCKS、HTTP、Shadowsocks、VMess 等多种代理协议。
 
-## 下载
+## 下载安装
+
+### Windows、macOS 和 Linux 安装文件下载
 
 https://github.com/mellow-io/mellow/releases
 
-### Homebrew 安装 (适用于 MacOS)
+### Homebrew 安装 (适用于 macOS)
 
 ```
 brew cask install mellow
