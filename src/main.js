@@ -919,7 +919,7 @@ function buildTrayMenu() {
   configs.forEach((config) => {
     mainMenus.push({
       label: config,
-      type: 'checkbox',
+      type: 'radio',
       checked: ((store.get('selectedConfig').length > 0) && (config == store.get('selectedConfig').replace(/^.*[\\\/]/, ''))),
       click: function() {
         const fullpath = path.join(configFolder, config)
@@ -1204,8 +1204,8 @@ function createTray() {
 }
 
 function reloadTray() {
-  tray.destroy()
-  createTray()
+  trayMenu = Menu.buildFromTemplate(buildTrayMenu())
+  tray.setContextMenu(trayMenu)
 }
 
 function monitorRunningStatus() {
