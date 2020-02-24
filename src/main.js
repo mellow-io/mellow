@@ -1265,8 +1265,6 @@ app.on('quit', () => {
 
 i18n.on('loaded', (loaded) => {
   const locale = app.getLocale()
-  log.info('locale')
-  log.info(locale)
   if (locale.includes('zh')) {
     i18n.changeLanguage('zh')
   } else {
