@@ -19,9 +19,27 @@ const AutoLaunch = require('auto-launch')
 const prompt = require('electron-prompt')
 const https = require('https')
 const semver = require('semver')
+const i18n = require('i18next')
+const i18nextBackend = require('i18next-node-fs-backend')
 
 const config = require('@mellow/config/config')
 const convert = require('@mellow/config/convert')
+
+var localesPath
+if (app.isPackaged) {
+  localesPath = path.join(process.resourcesPath, 'src/locales/{{lng}}/{{ns}}.json')
+} else {
+  localesPath = path.join(__dirname, 'locales/{{lng}}/{{ns}}.json')
+}
+const i18nextOptions = {
+  debug: true,
+  backend: {
+    loadPath: localesPath
+  },
+  fallbackLng: 'en'
+}
+i18n.use(i18nextBackend)
+i18n.init(i18nextOptions)
 
 const autoLauncher = new AutoLaunch({name: 'Mellow'})
 
@@ -332,7 +350,7 @@ async function startCore(callback) {
 
   const selectedConfig = store.get('selectedConfig')
   if (selectedConfig.length == 0) {
-      dialog.showMessageBox({ message: 'Please select a config.' })
+      dialog.showMessageBox({ message: i18n.t('Please select a config.') })
       return
   }
   if (selectedConfig.includes('.conf')) {
@@ -864,10 +882,10 @@ function checkForUpdates(silent) {
       latestVer = semver.clean(obj['tag_name'])
       ver = app.getVersion()
       if (ver != latestVer) {
-        dialog.showMessageBox({ message: util.format('A new version (%s) is available.\n\n\nRelease Notes:\n\n%s\n\n\nDownload:\n\n%s', latestVer, obj['body'], obj['html_url']) })
+        dialog.showMessageBox({ message: util.format(i18n.t('updateMessage'), latestVer, obj['body'], obj['html_url']) })
       } else {
         if (!silent) {
-          dialog.showMessageBox({ message: 'You are up-to-date!' })
+          dialog.showMessageBox({ message: i18n.t('You are up-to-date!') })
         }
       }
     })
@@ -899,15 +917,15 @@ function buildTrayMenu() {
   var mainMenus = []
   mainMenus = [
     ...mainMenus,
-    { label: 'Connect', type: 'normal', enabled: !isConnected(), click: function() {
+    { label: i18n.t('Connect'), type: 'normal', enabled: !isConnected(), click: function() {
         up()
       }
     },
-    { label: 'Disconnect', type: 'normal', enabled: isConnected(), click: function() {
+    { label: i18n.t('Disconnect'), type: 'normal', enabled: isConnected(), click: function() {
         down()
       }
     },
-    { label: 'Reconnect', type: 'normal', enabled: isConnected(), click: function() {
+    { label: i18n.t('Reconnect'), type: 'normal', enabled: isConnected(), click: function() {
         reconnect()
       }
     }
@@ -935,22 +953,22 @@ function buildTrayMenu() {
     mainMenus.push({ type: 'separator' })
   }
   mainMenus.push({
-    label: 'Edit Selected',
+    label: i18n.t('Edit Selected'),
     type: 'normal',
     click: function() {
       const config = store.get('selectedConfig')
       if (config.length > 0) {
         shell.openItem(config)
       } else {
-        dialog.showMessageBox({message: 'No selected config.'})
+        dialog.showMessageBox({message: i18n.t('No selected config.')})
         return
       }
     }
   }, {
-    label: 'Create Config',
+    label: i18n.t('Create Config'),
     type: 'submenu',
     submenu: Menu.buildFromTemplate([{
-      label: 'Create Conf Template',
+      label: i18n.t('Create Conf Template'),
       type: 'normal',
       click: () => {
         f = fs.openSync(path.join(configFolder, getFormattedTime() + '.conf'), 'w+')
@@ -959,7 +977,7 @@ function buildTrayMenu() {
         reloadTray()
       }
     }, {
-      label: 'Create JSON Template',
+      label: i18n.t('Create JSON Template'),
       type: 'normal',
       click: () => {
         f = fs.openSync(path.join(configFolder, getFormattedTime() + '.json'), 'w+')
@@ -970,12 +988,12 @@ function buildTrayMenu() {
     }, {
       type: 'separator'
     }, {
-      label: 'Create From URL',
+      label: i18n.t('Create From URL'),
       type: 'normal',
       click: () => {
         prompt({
-          title: 'Download Config',
-          label: 'Config URL:',
+          title: i18n.t('Download Config'),
+          label: i18n.t('Config URL:'),
           value: store.get('configUrl'),
           inputAttrs: {
               type: 'url'
@@ -1006,7 +1024,7 @@ function buildTrayMenu() {
                   fs.writeSync(fd, body)
                   fs.closeSync(fd)
                   store.set('configUrl', r)
-                  dialog.showMessageBox({ message: util.format('Config added as %s', filename) })
+                  dialog.showMessageBox({ message: util.format(i18n.t('Config added as %s'), filename) })
                   reloadTray()
                 })
                 res.on('timeout', ()=> {
@@ -1024,12 +1042,12 @@ function buildTrayMenu() {
     }])
   })
   mainMenus.push({
-    label: 'Config Folder',
+    label: i18n.t('Config Folder'),
     type: 'normal',
     click: () => { shell.openItem(configFolder) }
   })
   mainMenus.push({
-    label: 'Reload Configs',
+    label: i18n.t('Reload Configs'),
     type: 'normal',
     click: () => {
       reloadTray()
@@ -1039,11 +1057,11 @@ function buildTrayMenu() {
   mainMenus.push({ type: 'separator' })
 
   var otherMenus = [{
-    label: 'Preferences',
+    label: i18n.t('Preferences'),
     type: 'submenu',
     submenu: Menu.buildFromTemplate([
       {
-        label: 'Auto Launch',
+        label: i18n.t('Auto Launch'),
         type: 'checkbox',
         click: (item) => {
           store.set('autoLaunch', item.checked)
@@ -1053,19 +1071,19 @@ function buildTrayMenu() {
         visible: process.platform != 'win32'
       },
       {
-        label: 'Auto Connect',
+        label: i18n.t('Auto Connect'),
         type: 'checkbox',
         click: (item) => { store.set('autoConnect', item.checked) },
         checked: store.get('autoConnect')
       },
       {
-        label: 'Check Updates',
+        label: i18n.t('Check Updates'),
         type: 'checkbox',
         click: (item) => { store.set('checkUpdates', item.checked) },
         checked: store.get('checkUpdates')
       },
       {
-        label: 'Log Level',
+        label: i18n.t('Log Level'),
         type: 'submenu',
         submenu: Menu.buildFromTemplate([
           {
@@ -1102,16 +1120,16 @@ function buildTrayMenu() {
       },
       { type: 'separator' },
       {
-        label: 'Advanced',
+        label: i18n.t('Advanced'),
         type: 'submenu',
         submenu: Menu.buildFromTemplate([
           {
-            label: 'Set System DNS',
+            label: i18n.t('Set System DNS'),
             type: 'normal',
             click: (item) => {
               prompt({
-                title: 'Set System DNS Resolvers',
-                label: 'Comma-separated list:',
+                title: i18n.t('Set System DNS Resolvers'),
+                label: i18n.t('Comma-separated list:'),
                 value: store.get('systemDns'),
                 inputAttrs: {
                     type: 'text'
@@ -1127,13 +1145,13 @@ function buildTrayMenu() {
             visible: process.platform == 'win32'
           },
           {
-            label: 'Domain Sniffing',
+            label: i18n.t('Domain Sniffing'),
             type: 'checkbox',
             click: (item) => { store.set('sniffing', item.checked) },
             checked: store.get('sniffing')
           },
           {
-            label: 'Fake DNS',
+            label: i18n.t('Fake DNS'),
             type: 'checkbox',
             click: (item) => { store.set('fakeDns', item.checked) },
             checked: store.get('fakeDns')
@@ -1142,7 +1160,7 @@ function buildTrayMenu() {
       },
       { type: 'separator' },
       {
-        label: 'Reset',
+        label: i18n.t('Reset'),
         type: 'normal',
         click: (item) => {
           store.clear()
@@ -1153,38 +1171,38 @@ function buildTrayMenu() {
   },
   { type: 'separator' },
   {
-    label: 'Running Config',
+    label: i18n.t('Running Config'),
     type: 'normal',
     click: () => { shell.openItem(runningConfig) }
   },
-  { label: 'Sessions', type: 'normal', click: function() {
+  { label: i18n.t('Sessions'), type: 'normal', click: function() {
       if (core === null) {
-        dialog.showMessageBox({message: 'Proxy is not running.'})
+        dialog.showMessageBox({message: i18n.t('Proxy is not running.')})
       } else {
         shell.openExternal('http://localhost:6001/stats/session/plain')
       }
     }
   },
   {
-    label: 'Log',
+    label: i18n.t('Log'),
     type: 'normal',
     click: () => { shell.openItem(logPath) }
   },
   { type: 'separator' },
-  { label: 'Check For Updates', type: 'normal', click: function() {
+  { label: i18n.t('Check For Updates'), type: 'normal', click: function() {
       checkForUpdates(false)
     }
   },
-  { label: 'Help', type: 'normal', click: function() {
+  { label: i18n.t('Help'), type: 'normal', click: function() {
       shell.openExternal('https://github.com/mellow-io/mellow')
     }
   },
-  { label: 'About', type: 'normal', click: function() {
+  { label: i18n.t('About'), type: 'normal', click: function() {
       dialog.showMessageBox({ message: util.format('Mellow (v%s)\n\n%s', app.getVersion(), 'https://github.com/mellow-io/mellow') })
     }
   },
   { type: 'separator' },
-  { label: 'Quit', type: 'normal', click: function() {
+  { label: i18n.t('Quit'), type: 'normal', click: function() {
       down()
       app.quit()
     }
@@ -1242,5 +1260,19 @@ app.on('quit', () => {
         systemPreferences.unsubscribeNotification(themeChangedNotifier)
       }
       break
+  }
+})
+
+i18n.on('loaded', (loaded) => {
+  const locale = app.getLocale()
+  log.info('locale')
+  log.info(locale)
+  if (locale.includes('zh')) {
+    i18n.changeLanguage('zh')
+  } else {
+    i18n.changeLanguage('en')
+  }
+  if (tray !== null) {
+    reloadTray()
   }
 })
