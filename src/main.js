@@ -439,7 +439,7 @@ async function startCore(callback) {
   if (isWin32) {
     log.info('Ensuring tap device sets up correctly.')
     try {
-      out = await sudoExec(util.format('%s %s %s', path.join(helperResourcePath, 'ensure_tap_device.bat'), path.join(helperResourcePath, 'tap-windows6'), tunName))
+      out = await sudoExec(util.format('"%s" "%s" %s', path.join(helperResourcePath, 'ensure_tap_device.bat'), path.join(helperResourcePath, 'tap-windows6'), tunName))
       log.info(out)
     } catch (err) {
       dialog.showErrorBox('Error', 'TAP device not ready: ' + err)
@@ -618,10 +618,10 @@ async function configRoute() {
         execSync(util.format('"%s" add default %s -ifscope %s', routeCmd, origGw, origGwScope))
         break
       case 'win32':
-        await sudoExec(util.format('%s %s %s', path.join(helperResourcePath, 'config_route.bat'), tunGw, origGw))
+        await sudoExec(util.format('"%s" %s %s', path.join(helperResourcePath, 'config_route.bat'), tunGw, origGw))
         break
       case 'linux':
-        execSync(util.format('%s %s %s %s %s %s', path.join(helperResourcePath, 'config_route'), routeCmd, tunGw, origGw, origGwScope, sendThrough))
+        execSync(util.format('"%s" %s %s %s %s %s', path.join(helperResourcePath, 'config_route'), routeCmd, tunGw, origGw, origGwScope, sendThrough))
         break
     }
     log.info('Set ' + tunGw + ' as the default gateway.')
@@ -649,10 +649,10 @@ async function recoverRoute() {
           execSync(util.format('"%s" add default %s', routeCmd, origGw))
           break
         case 'win32':
-          await sudoExec(util.format('%s %s', path.join(helperResourcePath, 'recover_route.bat'), origGw))
+          await sudoExec(util.format('"%s" %s', path.join(helperResourcePath, 'recover_route.bat'), origGw))
           break
         case 'linux':
-          execSync(util.format('%s %s %s', path.join(helperResourcePath, 'recover_route'), routeCmd, sendThrough, origGw))
+          execSync(util.format('"%s" %s %s', path.join(helperResourcePath, 'recover_route'), routeCmd, sendThrough, origGw))
           break
       }
     } catch (error) {
@@ -888,7 +888,7 @@ async function installHelper() {
 
   if (isLinux) {
     let tmpResDir = '/tmp/mellow_helper_res'
-    execSync(util.format('cp -r %s %s', helperResourcePath, tmpResDir))
+    execSync(util.format('cp -r "%s" "%s"', helperResourcePath, tmpResDir))
     installer = path.join(tmpResDir, 'install_helper')
     cmd = util.format('"%s" "%s" "%s"', installer, tmpResDir, helperInstallPath)
   } else {
