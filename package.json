@@ -50,7 +50,8 @@
             "core",
             "install_helper",
             "md5sum",
-            "route"
+            "route",
+            "configure_proxy"
           ]
         },
         "src/helper/geosite.dat",

@@ -1,0 +1,43 @@
+#!/bin/sh
+
+state=$1
+http_port=1087
+socks_port=1086
+
+services=$(networksetup -listnetworkserviceorder | grep 'Hardware Port')
+
+while read line; do
+    sname=$(echo $line | awk -F  "(, )|(: )|[)]" '{print $2}')
+    sdev=$(echo $line | awk -F  "(, )|(: )|[)]" '{print $4}')
+    #echo "Current service: $sname, $sdev, $currentservice"
+    if [ -n "$sdev" ]; then
+        ifout="$(ifconfig $sdev 2>/dev/null)"
+        echo "$ifout" | grep 'status: active' > /dev/null 2>&1
+        rc="$?"
+        if [ "$rc" -eq 0 ]; then
+            currentservice="$sname"
+            currentdevice="$sdev"
+            currentmac=$(echo "$ifout" | awk '/ether/{print $2}')
+
+            # may have multiple active devices, so echo it here
+            # echo "$currentservice, $currentdevice, $currentmac"
+
+			if [ "$state" = "on" ]; then
+				networksetup -setwebproxy "$currentservice" "127.0.0.1" $http_port
+				networksetup -setsecurewebproxy "$currentservice" "127.0.0.1" $http_port
+				networksetup -setsocksfirewallproxy "$currentservice" "127.0.0.1" $socks_port
+			elif [ "$state" = "off" ]; then
+				networksetup -setwebproxystate "$currentservice" off
+				networksetup -setsecurewebproxystate "$currentservice" off
+				networksetup -setsocksfirewallproxystate "$currentservice" off
+			else
+				echo "invalid argument"
+			fi
+        fi
+    fi
+done <<< "$(echo "$services")"
+
+if [ -z "$currentservice" ]; then
+    >&2 echo "Could not find current service"
+    exit 1
+fi

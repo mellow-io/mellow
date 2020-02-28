@@ -1,6 +1,6 @@
 {
-	"Connect": "Connect",
-	"Disconnect": "Disconnect",
+  "Connect": "Connect",
+  "Disconnect": "Disconnect",
   "Reconnect": "Reconnect",
   "Edit Selected": "Edit Selected",
   "No selected config.": "No selected config.",
@@ -35,6 +35,7 @@
   "Quit": "Quit",
   "You are up-to-date!": "You are up-to-date!",
   "updateMessage": "A new version (%s) is available.\n\n\nRelease Notes:\n\n%s\n\n\nDownload:\n\n%s",
-  "Please select a config.": "Please select a config."
+  "Please select a config.": "Please select a config.",
+  "System Proxy": "System Proxy"
 }
 

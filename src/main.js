@@ -79,6 +79,10 @@ const schema = {
   systemDns: {
     type: 'string',
     default: '223.5.5.5,1.1.1.1'
+  },
+  systemProxy: {
+    type: 'boolean',
+    default: true
   }
 }
 const store = new Store({name: 'preference', schema: schema})
@@ -343,6 +347,13 @@ function checkHelper() {
   return true
 }
 
+function configureSystemProxy(enabled) {
+  const configureProxy =  path.join(helperResourcePath, 'configure_proxy')
+  const configureProxyCmd = util.format('"%s" "%s"', configureProxy, enabled ? 'on' : 'off')
+  log.info(util.format('Set system proxy with command: %s', configureProxyCmd))
+  execSync(configureProxyCmd)
+}
+
 async function startCore(callback) {
   coreInterrupt = false
 
@@ -356,7 +367,7 @@ async function startCore(callback) {
   if (selectedConfig.includes('.conf')) {
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
-      const v2json = convert.constructJson(content)
+      const v2json = convert.constructJson(content, store.get('systemProxy'))
       parsedConfig = JSON.stringify(v2json, null, 2)
     } catch(err) {
       dialog.showErrorBox('Error', 'Config error: ' +  err)
@@ -393,6 +404,10 @@ async function startCore(callback) {
       dialog.showErrorBox('Error', 'TAP device not ready: ' + err)
       return
     }
+  }
+
+  if (process.platform == 'darwin') {
+    configureSystemProxy(store.get('systemProxy'))
   }
 
   var params
@@ -640,6 +655,9 @@ async function stopCore() {
       core.kill('SIGTERM')
       core = null
     }
+  }
+  if (process.platform == 'darwin' && store.get('systemProxy')) {
+    configureSystemProxy(false)
   }
   setState(state.Disconnected)
 }
@@ -932,6 +950,22 @@ function buildTrayMenu() {
   ]
 
   mainMenus.push({ type: 'separator' })
+
+  mainMenus.push({
+    label: i18n.t('System Proxy'),
+    type: 'checkbox',
+    click: (item) => {
+      store.set('systemProxy', item.checked)
+      if (isConnected()) {
+        reconnect()
+      }
+    },
+    checked: store.get('systemProxy'),
+    visible: process.platform == 'darwin'
+  }, {
+    type: 'separator',
+    visible: process.platform == 'darwin'
+  })
 
   const configs = fs.readdirSync(configFolder).filter(x => (x.match(/^[^.].*(\.conf|\.json)$/g)))
   configs.forEach((config) => {
