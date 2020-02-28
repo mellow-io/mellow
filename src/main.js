@@ -25,6 +25,10 @@ const i18nextBackend = require('i18next-node-fs-backend')
 const config = require('@mellow/config/config')
 const convert = require('@mellow/config/convert')
 
+const isDarwin = process.platform == 'darwin'
+const isLinux = process.platform == 'linux'
+const isWin32 = process.platform == 'win32'
+
 var localesPath
 if (app.isPackaged) {
   localesPath = path.join(process.resourcesPath, 'src/locales/{{lng}}/{{ns}}.json')
@@ -202,6 +206,7 @@ let coreInterrupt = false
 let origGw = null
 let origGwScope = null
 let sendThrough = null
+var pacServer = null
 
 var tunName
 switch (process.platform) {
@@ -310,7 +315,7 @@ function monitorPowerEvent() {
   })
   electron.powerMonitor.on('suspend', () => {
     log.info('Device suspended.')
-    if (process.platform == 'win32') {
+    if (isWin32) {
       coreNeedResume = true
       down()
     }
@@ -347,11 +352,47 @@ function checkHelper() {
   return true
 }
 
+function startPacServer() {
+  const requestListener = (req, res) => {
+    const script = 'function FindProxyForURL(url, host) { return "SOCKS5 127.0.0.1:1086; SOCKS 127.0.0.1:1086" }'
+    console.log(req.url)
+    res.writeHead(200, {
+      'Content-Type': 'application/x-ns-proxy-autoconfig'
+    })
+    res.write(script)
+    res.end()
+  }
+  const http = require('http')
+  pacServer = http.createServer(requestListener)
+  pacServer.listen(7891, '127.0.0.1')
+}
+
+function stopPacServer() {
+  if (pacServer) {
+    pacServer.close()
+  }
+}
+
 function configureSystemProxy(enabled) {
-  const configureProxy =  path.join(helperResourcePath, 'configure_proxy')
-  const configureProxyCmd = util.format('"%s" "%s"', configureProxy, enabled ? 'on' : 'off')
-  log.info(util.format('Set system proxy with command: %s', configureProxyCmd))
-  execSync(configureProxyCmd)
+  switch (process.platform) {
+    case 'darwin':
+      var configureProxy =  path.join(helperResourcePath, 'configure_proxy')
+      var configureProxyCmd = util.format('"%s" "%s"', configureProxy, enabled ? 'on' : 'off')
+      log.info(util.format('Set system proxy with command: %s', configureProxyCmd))
+      execSync(configureProxyCmd)
+      break
+    case 'win32':
+      if (enabled) {
+        startPacServer()
+      } else {
+        stopPacServer()
+      }
+      var configureProxy =  path.join(helperResourcePath, 'configure_proxy.bat')
+      var configureProxyCmd = util.format('"%s" "%s"', configureProxy, enabled ? 'on' : 'off')
+      log.info(util.format('Set system proxy with command: %s', configureProxyCmd))
+      execSync(configureProxyCmd)
+      break
+  }
 }
 
 async function startCore(callback) {
@@ -395,7 +436,7 @@ async function startCore(callback) {
     return
   }
 
-  if (process.platform == 'win32') {
+  if (isWin32) {
     log.info('Ensuring tap device sets up correctly.')
     try {
       out = await sudoExec(util.format('%s %s %s', path.join(helperResourcePath, 'ensure_tap_device.bat'), path.join(helperResourcePath, 'tap-windows6'), tunName))
@@ -406,7 +447,7 @@ async function startCore(callback) {
     }
   }
 
-  if (process.platform == 'darwin') {
+  if (isDarwin || isWin32) {
     configureSystemProxy(store.get('systemProxy'))
   }
 
@@ -649,14 +690,14 @@ function stopCoreWindows() {
 
 async function stopCore() {
   if (core !== null) {
-    if (process.platform == 'win32') {
+    if (isWin32) {
       await stopCoreWindows()
     } else {
       core.kill('SIGTERM')
       core = null
     }
   }
-  if (process.platform == 'darwin' && store.get('systemProxy')) {
+  if ((isDarwin || isWin32) && store.get('systemProxy')) {
     configureSystemProxy(false)
   }
   setState(state.Disconnected)
@@ -845,7 +886,7 @@ async function installHelper() {
   var installer
   var cmd
 
-  if (process.platform == 'linux') {
+  if (isLinux) {
     let tmpResDir = '/tmp/mellow_helper_res'
     execSync(util.format('cp -r %s %s', helperResourcePath, tmpResDir))
     installer = path.join(tmpResDir, 'install_helper')
@@ -961,10 +1002,10 @@ function buildTrayMenu() {
       }
     },
     checked: store.get('systemProxy'),
-    visible: process.platform == 'darwin'
+    visible: isDarwin || isWin32
   }, {
     type: 'separator',
-    visible: process.platform == 'darwin'
+    visible: isDarwin || isWin32
   })
 
   const configs = fs.readdirSync(configFolder).filter(x => (x.match(/^[^.].*(\.conf|\.json)$/g)))
@@ -1102,7 +1143,7 @@ function buildTrayMenu() {
           resetAutoLaunch()
         },
         checked: store.get('autoLaunch'),
-        visible: process.platform != 'win32'
+        visible: !isWin32
       },
       {
         label: i18n.t('Auto Connect'),
@@ -1176,7 +1217,7 @@ function buildTrayMenu() {
                 }
               })
             },
-            visible: process.platform == 'win32'
+            visible: isWin32
           },
           {
             label: i18n.t('Domain Sniffing'),

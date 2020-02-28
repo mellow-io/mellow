@@ -72,7 +72,8 @@
             "ensure_tap_device.bat",
             "config_route.bat",
             "recover_route.bat",
-            "tap-windows6"
+            "tap-windows6",
+            "configure_proxy.bat"
           ]
         },
         {
