@@ -798,7 +798,31 @@ const constructOutbounds = (endpoint) => {
   return outbounds
 }
 
-const constructJson = (conf) => {
+const constructSystemInbounds = (enabled) => {
+  var inbounds = []
+  if (enabled) {
+    inbounds = [
+      {
+        "port": 1086,
+        "protocol": "socks",
+        "listen": "127.0.0.1",
+        "settings": {
+          "auth": "noauth",
+          "udp": false
+        }
+      },
+      {
+        "port": 1087,
+        "protocol": "http",
+        "listen": "127.0.0.1",
+        "settings": {}
+      }
+    ]
+  }
+  return inbounds
+}
+
+const constructJson = (conf, enableSystemInbound) => {
   const routingDomainStrategy = getLinesBySection(conf, 'RoutingDomainStrategy')
   const routingConf = getLinesBySection(conf, 'Routing')
   const balancerRule = getLinesBySection(conf, 'EndpointGroup')
@@ -817,11 +841,13 @@ const constructJson = (conf) => {
 
   const endpoint = getLinesBySection(conf, 'Endpoint')
   const outbounds = constructOutbounds(endpoint)
+  const inbounds = constructSystemInbounds(enableSystemInbound)
 
   var o = {
     log: log,
     dns: dns,
     outbounds: outbounds,
+    inbounds: inbounds,
     routing: routing
   }
 

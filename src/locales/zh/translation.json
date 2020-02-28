@@ -1,6 +1,6 @@
 {
-	"Connect": "连接",
-	"Disconnect": "断开连接",
+  "Connect": "连接",
+  "Disconnect": "断开连接",
   "Reconnect": "重新连接",
   "Edit Selected": "编辑选中配置",
   "No selected config.": "没有选中配置。",
@@ -35,5 +35,6 @@
   "Quit": "退出",
   "You are up-to-date!": "已经是新最版本！",
   "updateMessage": "有新版本 (%s)。\n\n\n新增功能：\n\n%s\n\n\n下载：\n\n%s",
-  "Please select a config.": "请先选择（或创建）一个配置。"
+  "Please select a config.": "请先选择（或创建）一个配置。",
+  "System Proxy": "系统代理"
 }
