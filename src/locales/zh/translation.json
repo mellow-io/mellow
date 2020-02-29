@@ -12,7 +12,6 @@
   "Config URL:": "配置下载链接:",
   "Config added as %s": "已添加配置 %s",
   "Config Folder": "打开配置目录",
-  "Reload Configs": "重新加载配置列表",
   "Preferences": "偏好设置",
   "Auto Launch": "开机启动",
   "Auto Connect": "启动后自动连接",
@@ -33,8 +32,12 @@
   "Help": "查看帮助",
   "About": "关于软件",
   "Quit": "退出",
-  "You are up-to-date!": "已经是新最版本！",
+  "You are up-to-date!": "已经是最新版本！",
   "updateMessage": "有新版本 (%s)。\n\n\n新增功能：\n\n%s\n\n\n下载：\n\n%s",
   "Please select a config.": "请先选择（或创建）一个配置。",
-  "System Proxy": "系统代理"
+  "System Proxy": "系统代理",
+  "File name must end with .conf or .json": "文件名必需以 .conf 或 .json 结尾",
+  "Rename Selected": "重命名选中配置",
+  "Rename Config": "重命名配置",
+  "New File Name:": "新文件名："
 }

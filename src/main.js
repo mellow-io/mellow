@@ -1040,6 +1040,37 @@ function buildTrayMenu() {
       }
     }
   }, {
+    label: i18n.t('Rename Selected'),
+    type: 'normal',
+    click: function() {
+      prompt({
+        title: i18n.t('Rename Config'),
+        label: i18n.t('New File Name:'),
+        value: path.basename(store.get('selectedConfig')),
+        inputAttrs: {
+          type: 'text',
+          required: true
+        }
+      })
+      .then((r) => {
+        if (!r.match(/^[^.].*(\.conf|\.json)$/g)) {
+          dialog.showErrorBox('Error', i18n.t('File name must end with .conf or .json'))
+          return
+        }
+        let newFile = path.join(configFolder, r)
+        fs.rename(store.get('selectedConfig'), newFile, (err) => {
+          if (err) {
+            dialog.showErrorBox('Error', 'Rename file failed: ' + err)
+          } else {
+            store.set('selectedConfig', newFile)
+          }
+        })
+      })
+      .catch((err) => {
+        dialog.showErrorBox('Error', 'Failed to rename config: ' + err)
+      })
+    }
+  }, {
     label: i18n.t('Create Config'),
     type: 'submenu',
     submenu: Menu.buildFromTemplate([{
@@ -1120,13 +1151,6 @@ function buildTrayMenu() {
     label: i18n.t('Config Folder'),
     type: 'normal',
     click: () => { shell.openItem(configFolder) }
-  })
-  mainMenus.push({
-    label: i18n.t('Reload Configs'),
-    type: 'normal',
-    click: () => {
-      reloadTray()
-    }
   })
 
   mainMenus.push({ type: 'separator' })
@@ -1309,8 +1333,17 @@ function monitorRunningStatus() {
   }, 60 * 1000)
 }
 
+function monitorConfigs() {
+  fs.watch(configFolder, (e, f) => {
+    if (e == 'rename') {
+      reloadTray()
+    }
+  })
+}
+
 function init() {
   createTray()
+  monitorConfigs()
   monitorPowerEvent()
   monitorRunningStatus()
   if (store.get('autoConnect')) {
