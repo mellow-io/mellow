@@ -12,7 +12,6 @@
   "Config URL:": "Config URL:",
   "Config added as %s": "Config added as %s",
   "Config Folder": "Config Folder",
-  "Reload Configs": "Reload Configs",
   "Preferences": "Preferences",
   "Auto Launch": "Auto Launch",
   "Auto Connect": "Auto Connect",
@@ -36,6 +35,9 @@
   "You are up-to-date!": "You are up-to-date!",
   "updateMessage": "A new version (%s) is available.\n\n\nRelease Notes:\n\n%s\n\n\nDownload:\n\n%s",
   "Please select a config.": "Please select a config.",
-  "System Proxy": "System Proxy"
+  "System Proxy": "System Proxy",
+  "File name must end with .conf or .json": "File name must end with .conf or .json",
+  "Rename Selected": "Rename Selected",
+  "Rename Config": "Rename Config",
+  "New File Name:": "New File Name:"
 }
-
