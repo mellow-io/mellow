@@ -249,7 +249,11 @@ const trayIcon = {
     switch (process.platform) {
       case 'linux':
       case 'darwin':
-        return path.join(__dirname, 'assets/tray-off-icon.png')
+        if (isDarkMode()) {
+          return path.join(__dirname, 'assets/tray-off-icon-light.png')
+        } else {
+          return path.join(__dirname, 'assets/tray-off-icon.png')
+        }
       case 'win32':
         return path.join(__dirname, 'assets/tray-off-icon.png')
     }
