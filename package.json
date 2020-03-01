@@ -9,6 +9,7 @@
     "distmac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder -m",
     "distwin": "electron-builder -w",
     "distlinux": "electron-builder -l",
+    "dlcore": "bash scripts/dl_core.sh",
     "dlgeo": "bash scripts/dl_mmdb.sh && bash scripts/dl_geosite.sh"
   },
   "devDependencies": {

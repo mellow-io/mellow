@@ -15,6 +15,7 @@ install:
   - yarn
 
 script:
+  - yarn dlcore
   - yarn dlgeo
   - yarn test
   - yarn distmac

@@ -1,3 +1,6 @@
+src/helper/darwin/core
+src/helper/linux/core
+src/helper/win32/core.exe
 geo.mmdb
 geosite.dat
 fakedns.cache

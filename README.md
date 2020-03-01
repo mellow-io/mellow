@@ -131,14 +131,14 @@ loglevel = warning
 建议在 macOS 或者 Linux 上进行开发或构建，如果想在 Windows 上开发，那可能需要手动下载一下依赖数据（因为是用 curl 来下载）。
 
 ```sh
-git clone --depth 1 https://github.com/mellow-io/mellow.git
+git clone https://github.com/mellow-io/mellow.git
 cd mellow
 
 # 安装依赖
 yarn
 
-# 下载数据文件：geosite.dat, geo.mmdb
-yarn dlgeo
+# 下载核心以及数据文件 ~60MB
+yarn dlcore && yarn dlgeo
 
 # 运行
 yarn start
