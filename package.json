@@ -41,7 +41,7 @@
   "build": {
     "appId": "org.mellow.mellow",
     "mac": {
-      "icon": "src/assets/icon.png",
+      "icon": "src/assets/icon-mac.icns",
       "extraResources": [
         {
           "from": "src/helper/darwin",
