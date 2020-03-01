@@ -26,13 +26,13 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: "OtI74uPUQvLasnFy0pfRxpWaltUiNYGgZ+o/1tEuxnaktMfLLLTnSba7GLhl4jzJXwvg5bEMQL1QVQpp1vtalX871Ey0m7tV7X83GVuaEA/ToE7q2lazErCH69e5/1M/SpHbIDWvC7QO5oyJNv7SI0giQ1H+YDjgrIHscEVBme5f8ZCeUoxw7wKVQPf8NJAVYJYmfG7Huu+trtNuzmId10Drs33jo2NNB3fW12Fp4sJbdeHEe1pVaBsChaK8f6hnZdrvPvc5XbKZfDMEgyEp1mrRUH7whNmtS/uoRbhaUEJpZCuu0COnRricxa2lntOsZRa5E2gvfIlNpgLHfV4pcqkCCBbJa0QcOQYciZSEtXUCKicWu05zqT80eHlRXoKXAXeN/jRwJk+tCs7K8jeLwM1FBg3zKmKhKdB9Am8yXNKTwucuVv+NEYsUUwW8SYXV59aKkGZRZ/qT/sIuq6RlKq/Az92GoFlPd+NsUE5gCFYwZb1OuHMaYvbcjhaz7cYXL6DHAiJ60PphQAUocf7GdoUwVFVdeI5CC2x9m4Nul371oBkcdHlnPvGIVGgeh5MvRedCUBU/FEJZiQC9m/7bdJ/zVEiOV0loIteEaUV7m9pdfkJwvLw95nP+N2LKMMIURyhEq94CgW2SLCS5wn2CRjcY+G3/DooHbxkWILdXAzw="
+    secure: TkUl9FEUPwwSlyn5cHoBl6/k7iELyUJ2LXxjeE3FILVbF17y155rZ8tQVixnQwZQP5cptQ6tTf2/DdEqbWfF1Mc0k45bvTl5Aj4/FCXS+V6iSIkj/jNcdqR7dv5XU1+L0Xy9RnAy/7NAwcknhpLeR5kEV8jKNjPKwfDYHeDtnkb6Lx8Z3lo1MDXlV6/umY6OGH0kUH7WH7KxD3iHGy/yn+GrdzYFH6y0sKNhSa+7rKS1o/axiAkTjDfTyfHroRtaF5eZZbw6CwCI1RTvtJfr885hbKGLTa5kF/WVW8wMWJ++eykv3w8I0LiLi2/F7lG7Okdnzrh91SQ3v0zqRfY80WLm3nvD2CW9kvveDlUOW06YYk/fYmChxUGPeEwC2e2HTsJ31jNGXTNx/tKWCi63jZ4KoWZ1WmZLkQvVtKgwGl3oCsZqJgGHDcsIru+Brj9paBlVpocKM8NK7bMrLBgT/LvQdxlRK9clUkjjLbOmdeYbd/rOrdUc9EJ/3bkVyCuy9CQN/UnYjPUqD4aO35762EN5929C4U3JXWCphi2l4e4rp7nFd/+pGyRUNR9APsmT+A80vi5/CkLh3IoLYG5BYr1iHFYHJWiFyysq/EDYbE9QaQvdk/oYxo85v9nW177nE0YGRtHexcngnUI/1C6D4RSlv417EOaSNnT81ayQ7f4=
   file_glob: true
   file:
     - "dist/Mellow Setup*.exe"
     - "dist/Mellow*.dmg"
     - "dist/Mellow*.AppImage"
   overwrite: true
-  skip_cleanup: true
+  skip_cleanup: false
   on:
     tags: true
