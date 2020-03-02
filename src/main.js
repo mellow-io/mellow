@@ -29,6 +29,40 @@ const isDarwin = process.platform == 'darwin'
 const isLinux = process.platform == 'linux'
 const isWin32 = process.platform == 'win32'
 
+let running = false
+let helperVerified = false
+let coreNeedResume = false
+let tray = null
+let trayMenu = null
+let core = null
+let coreRpcPort = 2884
+let systemProxyHttpPort = 2885
+let systemProxySocksPort = 2886
+let pacServerPort = 2887
+let coreInterrupt = false
+let origGw = null
+let origGwScope = null
+let sendThrough = null
+var pacServer = null
+
+var tunName
+switch (process.platform) {
+  case 'darwin':
+    tunName = 'utun233'
+    break
+  case 'win32':
+    tunName = 'mellow-tap0'
+    break
+  case 'linux':
+    tunName = 'tun1'
+    break
+}
+
+let tunAddr = '10.255.0.2'
+let tunMask = '255.255.255.0'
+let tunGw = '10.255.0.1'
+var tunAddrBlock = new Netmask(tunAddr, tunMask)
+
 var localesPath
 if (app.isPackaged) {
   localesPath = path.join(process.resourcesPath, 'src/locales/{{lng}}/{{ns}}.json')
@@ -195,37 +229,6 @@ switch(process.platform) {
     break
 }
 
-let running = false
-let helperVerified = false
-let coreNeedResume = false
-let tray = null
-let trayMenu = null
-let core = null
-let coreRpcPort = 6002
-let coreInterrupt = false
-let origGw = null
-let origGwScope = null
-let sendThrough = null
-var pacServer = null
-
-var tunName
-switch (process.platform) {
-  case 'darwin':
-    tunName = 'utun233'
-    break
-  case 'win32':
-    tunName = 'mellow-tap0'
-    break
-  case 'linux':
-    tunName = 'tun1'
-    break
-}
-
-let tunAddr = '10.255.0.2'
-let tunMask = '255.255.255.0'
-let tunGw = '10.255.0.1'
-var tunAddrBlock = new Netmask(tunAddr, tunMask)
-
 function isDarkMode() {
   return (systemPreferences.getUserDefault('AppleInterfaceStyle', 'string') == 'Dark')
 }
@@ -359,7 +362,7 @@ function checkHelper() {
 
 function startPacServer() {
   const requestListener = (req, res) => {
-    const script = 'function FindProxyForURL(url, host) { return "SOCKS5 127.0.0.1:1086; SOCKS 127.0.0.1:1086" }'
+    const script = util.format('function FindProxyForURL(url, host) { return "SOCKS5 127.0.0.1:%s; SOCKS 127.0.0.1:%s" }', systemProxySocksPort, systemProxySocksPort)
     console.log(req.url)
     res.writeHead(200, {
       'Content-Type': 'application/x-ns-proxy-autoconfig'
@@ -369,7 +372,7 @@ function startPacServer() {
   }
   const http = require('http')
   pacServer = http.createServer(requestListener)
-  pacServer.listen(7891, '127.0.0.1')
+  pacServer.listen(pacServerPort, '127.0.0.1')
 }
 
 function stopPacServer() {
@@ -382,7 +385,7 @@ function configureSystemProxy(enabled) {
   switch (process.platform) {
     case 'darwin':
       var configureProxy =  path.join(helperResourcePath, 'configure_proxy')
-      var configureProxyCmd = util.format('"%s" "%s"', configureProxy, enabled ? 'on' : 'off')
+      var configureProxyCmd = util.format('"%s" "%s"', configureProxy, enabled ? 'on' : 'off', systemProxyHttpPort, systemProxySocksPort)
       log.info(util.format('Set system proxy with command: %s', configureProxyCmd))
       execSync(configureProxyCmd)
       break
@@ -393,7 +396,7 @@ function configureSystemProxy(enabled) {
         stopPacServer()
       }
       var configureProxy =  path.join(helperResourcePath, 'configure_proxy.bat')
-      var configureProxyCmd = util.format('"%s" "%s"', configureProxy, enabled ? 'on' : 'off')
+      var configureProxyCmd = util.format('"%s" "%s" %s', configureProxy, enabled ? 'on' : 'off', pacServerPort)
       log.info(util.format('Set system proxy with command: %s', configureProxyCmd))
       execSync(configureProxyCmd)
       break
@@ -413,7 +416,12 @@ async function startCore(callback) {
   if (selectedConfig.includes('.conf')) {
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
-      const v2json = convert.constructJson(content, store.get('systemProxy'))
+      const systemProxyOpts = {
+        enabled: store.get('systemProxy'),
+        httpPort: systemProxyHttpPort,
+        socksPort: systemProxySocksPort
+      }
+      const v2json = convert.constructJson(content, systemProxyOpts)
       parsedConfig = JSON.stringify(v2json, null, 2)
     } catch(err) {
       dialog.showErrorBox('Error', 'Config error: ' +  err)

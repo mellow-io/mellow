@@ -1,8 +1,8 @@
 #!/bin/sh
 
 state=$1
-http_port=1087
-socks_port=1086
+http_port=$2
+socks_port=$3
 
 services=$(networksetup -listnetworkserviceorder | grep 'Hardware Port')
 
