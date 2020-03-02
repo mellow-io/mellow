@@ -205,6 +205,17 @@ JSON 配置文件中不需要有 Inbound，但也可以自行配置 Inbound 作�
 1. 某些 UDP 会话如果持续时间过短，则会无法获取其发送进程。
 2. 在 Windows 上，会看到较多的 `unknown process`，这是因为 Mellow 没有权限访问系统进程的信息，特别是 DNS 请求，因为发送 DNS 请求的通常是一个名为 svchost.exe 的系统进程。
 
+### “系统代理” 选项的作用是什么？
+
+Mellow 目前提供两种流量接管方式，一是 TUN 模式（某些软件中所指的 Enhanced Mode 就是这个），二是系统代理（常见的代理软件都用这个，不严谨地说就是只代理浏览器请求那类），与其它软件不同，Mellow 默认强制开启 TUN 模式，可选开启 “系统代理” 模式。
+
+TUN 模式已经可以接管全部流量了，为什么还需要 “系统代理” 模式？
+
+1. TUN 模式有性能瓶颈。
+2. “系统代理” 模式不会有太多 DNS 相关的问题，代理浏览器请求也快。
+
+开启 “系统代理” 的缺点大概就是 “请求记录” 页面看不到浏览器的请求，需要到日志里看。
+
 ### 可以在 Linux 上以命令行方式运行吗？
 
 可以的，只需要把 [这](https://github.com/mellow-io/mellow/blob/master/src/helper/linux/core) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/mellow-io/mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。
