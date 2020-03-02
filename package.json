@@ -9,13 +9,15 @@
     "distmac": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder -m",
     "distwin": "electron-builder -w",
     "distlinux": "electron-builder -l",
-    "dlcore": "bash scripts/dl_core.sh",
-    "dlgeo": "bash scripts/dl_mmdb.sh && bash scripts/dl_geosite.sh"
+    "dlcore": "node scripts/dl_core.js",
+    "dlgeo": "node scripts/dl_geo.js"
   },
   "devDependencies": {
+    "axios": "^0.19.2",
     "electron": "^8.0.1",
     "electron-builder": "^22.3.2",
-    "jest": "^24.9.0"
+    "jest": "^24.9.0",
+    "targz": "^1.0.1"
   },
   "dependencies": {
     "auto-launch": "^5.0.5",

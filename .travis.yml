@@ -15,8 +15,8 @@ install:
   - yarn
 
 script:
-  - yarn dlcore
   - yarn dlgeo
+  - yarn dlcore --all
   - yarn test
   - yarn distmac
   - USE_HARD_LINKS=false yarn distwin

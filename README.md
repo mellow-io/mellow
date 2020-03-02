@@ -128,8 +128,6 @@ loglevel = warning
 
 ## 开发运行和构建
 
-建议在 macOS 或者 Linux 上进行开发或构建，如果想在 Windows 上开发，那可能需要手动下载一下依赖数据（因为是用 curl 来下载）。
-
 ```sh
 git clone https://github.com/mellow-io/mellow.git
 cd mellow
@@ -137,8 +135,12 @@ cd mellow
 # 安装依赖
 yarn
 
-# 下载核心以及数据文件 ~60MB
-yarn dlcore && yarn dlgeo
+# 下载数据文件
+yarn dlgeo
+
+# 下载核心
+# 默认只下载本系统对应的核心文件，如果要为其它系统构建，加 `--all` 下载其它系统对应的文件
+yarn dlcore [--all]
 
 # 运行
 yarn start
