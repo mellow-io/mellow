@@ -792,7 +792,7 @@ async function up() {
       running = true
     } else {
       // Core is running but the default gateway is not the tun interface,
-      // it's very likely network has been reseted due to network changes.
+      // it's very likely network has been reset due to network changes.
       // And the original gateway is also very likely point to a different
       // IP, we must restart the core and pass the correct send through address.
       await stopCore()
