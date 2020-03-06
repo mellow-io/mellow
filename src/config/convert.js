@@ -822,7 +822,18 @@ const constructSystemInbounds = (opts) => {
   return inbounds
 }
 
-const constructJson = (conf, systemInboundOpts) => {
+const appendInbounds = (config, inbounds) => {
+  if (inbounds.length > 0) {
+    if (config.inbounds) {
+      config.inbounds.push(...inbounds)
+    } else {
+      config['inbounds'] = inbounds
+    }
+  }
+  return config
+}
+
+const constructJson = (conf) => {
   const routingDomainStrategy = getLinesBySection(conf, 'RoutingDomainStrategy')
   const routingConf = getLinesBySection(conf, 'Routing')
   const balancerRule = getLinesBySection(conf, 'EndpointGroup')
@@ -841,13 +852,11 @@ const constructJson = (conf, systemInboundOpts) => {
 
   const endpoint = getLinesBySection(conf, 'Endpoint')
   const outbounds = constructOutbounds(endpoint)
-  const inbounds = constructSystemInbounds(systemInboundOpts)
 
   var o = {
     log: log,
     dns: dns,
     outbounds: outbounds,
-    inbounds: inbounds,
     routing: routing
   }
 
@@ -866,7 +875,9 @@ module.exports = {
   constructDns,
   constructLog,
   constructOutbounds,
-  constructJson
+  constructJson,
+  constructSystemInbounds,
+  appendInbounds
 }
 
 if (typeof require !== 'undefined' && require.main === module) {

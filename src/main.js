@@ -416,12 +416,16 @@ async function startCore(callback) {
   if (selectedConfig.includes('.conf')) {
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
+      var v2json = convert.constructJson(content)
       const systemProxyOpts = {
         enabled: store.get('systemProxy'),
         httpPort: systemProxyHttpPort,
         socksPort: systemProxySocksPort
       }
-      const v2json = convert.constructJson(content, systemProxyOpts)
+      if (systemProxyOpts.enabled) {
+        const inbounds = convert.constructSystemInbounds(systemProxyOpts)
+        v2json = convert.appendInbounds(v2json, inbounds)
+      }
       parsedConfig = JSON.stringify(v2json, null, 2)
     } catch(err) {
       dialog.showErrorBox('Error', 'Config error: ' +  err)
