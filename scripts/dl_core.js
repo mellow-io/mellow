@@ -3,12 +3,12 @@ const fs = require('fs')
 const util = require('util')
 const path = require('path')
 
-const version = 'v1.0.0'
+const version = 'v1.0.2'
 
 const links = {
-  darwin: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-darwin', version),
-  linux: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-linux', version),
-  win32: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-win32.exe', version)
+  darwin: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-darwin-10.6-amd64', version),
+  linux: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-linux-amd64', version),
+  win32: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-windows-4.0-amd64.exe', version)
 }
 const dsts = {
   darwin: path.join(__dirname, '../src/helper/darwin/core'),
