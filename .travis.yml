@@ -33,6 +33,6 @@ deploy:
     - "dist/Mellow*.dmg"
     - "dist/Mellow*.AppImage"
   overwrite: true
-  skip_cleanup: false
+  skip_cleanup: true
   on:
     tags: true

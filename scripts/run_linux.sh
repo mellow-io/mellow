@@ -13,9 +13,9 @@ ORIG_GW=`ip route get 1 | awk '{print $3;exit}'`
 ORIG_ST_SCOPE=`ip route get 1 | awk '{print $5;exit}'`
 ORIG_ST=`ip route get 1 | awk '{print $7;exit}'`
 
-echo "Original send through address $ORIG_ST"
-echo "Original send through scope $ORIG_ST_SCOPE"
-echo "Original gateway $ORIG_GW"
+echo "Original send through address $ORIG_ST (It should be a valid IP address)"
+echo "Original send through scope $ORIG_ST_SCOPE (It should be a valid network interface name)"
+echo "Original gateway $ORIG_GW (It should be a valid IP address)"
 
 if [ -f `which realpath` ]; then
   CONFIG_FULL_PATH=`realpath $CONFIG_FILE`
