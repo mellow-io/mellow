@@ -165,6 +165,7 @@ if (app.isPackaged) {
 
 var helperInstallPath
 var helperFiles
+var executableHelperFiles
 switch (process.platform) {
   case 'darwin':
     helperInstallPath = "/Library/Application Support/Mellow"
@@ -175,12 +176,22 @@ switch (process.platform) {
       'md5sum',
       'route'
     ]
+    executableHelperFiles = [
+      'core',
+      'md5sum',
+      'route'
+    ]
     break
   case 'linux':
     helperInstallPath = '/usr/local/mellow'
     helperFiles = [
       'geo.mmdb',
       'geosite.dat',
+      'core',
+      'md5sum',
+      'ip'
+    ]
+    executableHelperFiles = [
       'core',
       'md5sum',
       'ip'
@@ -355,6 +366,15 @@ function checkHelper() {
         log.info(err)
         return false
       }
+    }
+  }
+  for (let f of executableHelperFiles) {
+    installedFile = path.join(helperInstallPath, f)
+    try {
+      execSync(util.format('sh -c "[ -x \'%s\' ]"', installedFile))
+    } catch (err) {
+      log.info('File requires execute permission', installedFile)
+      return false
     }
   }
   return true
@@ -558,6 +578,9 @@ async function startCore(callback) {
     log.info('Core errored.')
     coreInterrupt = true
     core = null
+    if ((isDarwin || isWin32) && store.get('systemProxy')) {
+      configureSystemProxy(false)
+    }
     setState(state.Disconnected)
     log.info(err)
     dialog.showErrorBox('Error', util.format('Failed to start the Core, see "%s" for more details.', logPath))

@@ -18,3 +18,7 @@ chown root "$INSTALL_PATH/ip"
 chmod +s "$INSTALL_PATH/core"
 chmod +s "$INSTALL_PATH/md5sum"
 chmod +s "$INSTALL_PATH/ip"
+
+chmod +x "$INSTALL_PATH/core"
+chmod +x "$INSTALL_PATH/md5sum"
+chmod +x "$INSTALL_PATH/ip"
