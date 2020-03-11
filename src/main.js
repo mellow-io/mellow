@@ -1093,6 +1093,9 @@ function buildTrayMenu() {
         }
       })
       .then((r) => {
+        if (!r) {
+          return
+        }
         if (!r.match(/^[^.].*(\.conf|\.json)$/g)) {
           dialog.showErrorBox('Error', i18n.t('File name must end with .conf or .json'))
           return
