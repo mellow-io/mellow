@@ -35,10 +35,10 @@ let coreNeedResume = false
 let tray = null
 let trayMenu = null
 let core = null
-let coreRpcPort = 2884
-let systemProxyHttpPort = 2885
-let systemProxySocksPort = 2886
-let pacServerPort = 2887
+let coreRpcPort = null
+let systemProxyHttpPort = null
+let systemProxySocksPort = null
+let pacServerPort = null
 let coreInterrupt = false
 let origGw = null
 let origGwScope = null
@@ -121,6 +121,14 @@ const schema = {
   systemProxy: {
     type: 'boolean',
     default: true
+  },
+  systemHttpProxyPort: {
+    type: 'number',
+    default: 0
+  },
+  systemSocksProxyPort: {
+    type: 'number',
+    default: 0
   }
 }
 const store = new Store({name: 'preference', schema: schema})
@@ -305,6 +313,18 @@ function setState(s) {
   currentState = s
 }
 
+function getPort(port) {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer()
+    server.on('error', (err) => {
+      if (err.code !== 'EADDRINUSE') return reject(err)
+      server.listen(0)
+    })
+    server.on('listening', () => (port => server.close(() => resolve(port)))(server.address().port))
+    server.listen(port)
+  })
+}
+
 switch (process.platform) {
   case 'darwin':
     if (app.isPackaged) {
@@ -380,7 +400,7 @@ function checkHelper() {
   return true
 }
 
-function startPacServer() {
+async function startPacServer() {
   const requestListener = (req, res) => {
     const script = util.format('function FindProxyForURL(url, host) { return "SOCKS5 127.0.0.1:%s; SOCKS 127.0.0.1:%s" }', systemProxySocksPort, systemProxySocksPort)
     console.log(req.url)
@@ -392,7 +412,9 @@ function startPacServer() {
   }
   const http = require('http')
   pacServer = http.createServer(requestListener)
+  pacServerPort = await getPort(0)
   pacServer.listen(pacServerPort, '127.0.0.1')
+  info.log(util.format('PAC server listening on 127.0.0.1:%s', pacServerPort))
 }
 
 function stopPacServer() {
@@ -401,7 +423,7 @@ function stopPacServer() {
   }
 }
 
-function configureSystemProxy(enabled) {
+async function configureSystemProxy(enabled) {
   switch (process.platform) {
     case 'darwin':
       var configureProxy =  path.join(helperResourcePath, 'configure_proxy')
@@ -411,7 +433,7 @@ function configureSystemProxy(enabled) {
       break
     case 'win32':
       if (enabled) {
-        startPacServer()
+        await startPacServer()
       } else {
         stopPacServer()
       }
@@ -437,12 +459,15 @@ async function startCore(callback) {
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
       var v2json = convert.constructJson(content)
-      const systemProxyOpts = {
-        enabled: store.get('systemProxy'),
-        httpPort: systemProxyHttpPort,
-        socksPort: systemProxySocksPort
-      }
-      if (systemProxyOpts.enabled) {
+      if (store.get('systemProxy')) {
+        systemProxyHttpPort = await getPort(store.get('systemHttpProxyPort'))
+        systemProxySocksPort = await getPort(store.get('systemSocksProxyPort'))
+        log.info(util.format('System SOCKS proxy port %s, HTTP/HTTPS proxy port %s', systemProxySocksPort, systemProxyHttpPort))
+        const systemProxyOpts = {
+          enabled: true,
+          httpPort: systemProxyHttpPort,
+          socksPort: systemProxySocksPort
+        }
         const inbounds = convert.constructSystemInbounds(systemProxyOpts)
         v2json = convert.appendInbounds(v2json, inbounds)
       }
@@ -485,7 +510,7 @@ async function startCore(callback) {
   }
 
   if (isDarwin || isWin32) {
-    configureSystemProxy(store.get('systemProxy'))
+    await configureSystemProxy(store.get('systemProxy'))
   }
 
   var params
@@ -507,6 +532,8 @@ async function startCore(callback) {
       ]
       break
     case 'win32':
+      coreRpcPort = await getPort(0)
+      log.info('Core management port', coreRpcPort)
       // The flag order is important, some flags won't work in specific
       // flag order, and I don't known exactly why is it.
       params = [
@@ -574,12 +601,12 @@ async function startCore(callback) {
 
     setState(state.Disconnected)
   })
-  core.on('error', (err) => {
+  core.on('error', async (err) => {
     log.info('Core errored.')
     coreInterrupt = true
     core = null
     if ((isDarwin || isWin32) && store.get('systemProxy')) {
-      configureSystemProxy(false)
+      await configureSystemProxy(false)
     }
     setState(state.Disconnected)
     log.info(err)
@@ -738,7 +765,7 @@ async function stopCore() {
     }
   }
   if ((isDarwin || isWin32) && store.get('systemProxy')) {
-    configureSystemProxy(false)
+    await configureSystemProxy(false)
   }
   setState(state.Disconnected)
 }
@@ -1282,6 +1309,48 @@ function buildTrayMenu() {
               })
             },
             visible: isWin32
+          },
+          {
+            label: i18n.t('Set SOCKS Proxy Port'),
+            type: 'normal',
+            click: (item) => {
+              prompt({
+                title: i18n.t('System SOCKS Proxy Port'),
+                label: i18n.t('Port (Random if not specified):'),
+                value: store.get('systemSocksProxyPort'),
+                inputAttrs: {
+                    type: 'text'
+                }
+              })
+              .then((r) => {
+                if (r) {
+                  // remove all whitespaces before conversion
+                  store.set('systemSocksProxyPort', parseInt(r.replace(/\s/g,'')) || 0)
+                }
+              })
+            },
+            visible: isDarwin || isWindows
+          },
+          {
+            label: i18n.t('Set HTTP Proxy Port'),
+            type: 'normal',
+            click: (item) => {
+              prompt({
+                title: i18n.t('System HTTP/HTTPS Proxy Port'),
+                label: i18n.t('Port (Random if not specified):'),
+                value: store.get('systemHttpProxyPort'),
+                inputAttrs: {
+                    type: 'text'
+                }
+              })
+              .then((r) => {
+                if (r) {
+                  // remove all whitespaces before conversion
+                  store.set('systemHttpProxyPort', parseInt(r.replace(/\s/g,'')) || 0)
+                }
+              })
+            },
+            visible: isDarwin || isWindows
           },
           {
             label: i18n.t('Domain Sniffing'),
