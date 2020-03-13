@@ -29,6 +29,7 @@ const isDarwin = process.platform == 'darwin'
 const isLinux = process.platform == 'linux'
 const isWin32 = process.platform == 'win32'
 
+let win = null
 let running = false
 let helperVerified = false
 let coreNeedResume = false
@@ -305,17 +306,6 @@ function setState(s) {
   currentState = s
 }
 
-switch (process.platform) {
-  case 'darwin':
-    if (app.isPackaged) {
-      app.dock.hide()
-    }
-    break
-  case 'linux':
-  case 'win32':
-    break
-}
-
 let themeChangedNotifier = null
 switch (process.platform) {
   case 'darwin':
@@ -502,8 +492,7 @@ async function startCore(callback) {
         '-vconfig', runningConfig,
         '-proxyType', 'v2ray',
         '-relayICMP',
-        '-loglevel', store.get('loglevel'),
-        '-stats'
+        '-loglevel', store.get('loglevel')
       ]
       break
     case 'win32':
@@ -519,7 +508,6 @@ async function startCore(callback) {
         '-sendThrough', sendThrough,
         '-proxyType', 'v2ray',
         '-relayICMP',
-        '-stats',
         '-loglevel', store.get('loglevel'),
         '-vconfig', runningConfig
       ]
@@ -1321,7 +1309,18 @@ function buildTrayMenu() {
       if (core === null) {
         dialog.showMessageBox({message: i18n.t('Proxy is not running.')})
       } else {
-        shell.openExternal('http://localhost:6001/stats/session/plain')
+        // shell.openExternal('http://localhost:6001/stats/session/plain')
+        if (win && !win.isDestroyed()) {
+          if (win.isMinimized()) {
+            win.restore()
+          }
+          win.show()
+          win.focus()
+        } else {
+          win = new BrowserWindow({ width: 800, height: 600 })
+          win.loadURL(`file://${__dirname}/web/sessions.html`)
+          win.maximize()
+        }
       }
     }
   },
@@ -1385,6 +1384,15 @@ function monitorConfigs() {
 }
 
 function init() {
+  switch (process.platform) {
+    case 'darwin':
+      app.dock.hide()
+      break
+    case 'linux':
+    case 'win32':
+      break
+  }
+
   createTray()
   monitorConfigs()
   monitorPowerEvent()
@@ -1401,7 +1409,25 @@ function init() {
 app.on('ready', init)
 
 app.on('window-all-closed', function () {
-  // Do nothing.
+  switch (process.platform) {
+    case 'darwin':
+      app.dock.hide()
+      break
+    case 'linux':
+    case 'win32':
+      break
+  }
+})
+
+app.on('browser-window-created', () => {
+  switch (process.platform) {
+    case 'darwin':
+      app.dock.show()
+      break
+    case 'linux':
+    case 'win32':
+      break
+  }
 })
 
 app.on('quit', () => {

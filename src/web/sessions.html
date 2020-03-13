@@ -1,0 +1,112 @@
+<html>
+  <head>
+    <style>
+      table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        text-align: right;
+        padding: 4;
+        font-size: small;
+      }
+      .highlight {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      function numberWithCommas(x) {
+          return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+      }
+
+      function toDuration(start, end) {
+          endSecs = Date.parse(end)
+          if (endSecs < 0) {
+            endSecs = Date.now()
+          }
+          let secs = parseInt((endSecs - Date.parse(start)) / 1000)
+          hours = Math.floor(secs / 60 / 60)
+          minutes = Math.floor(secs / 60) % 60
+          seconds = Math.floor(secs - minutes * 60)
+          var r = '' 
+          if (hours > 0) {
+            r += hours + 'h'
+          }
+          if (minutes > 0 || hours > 0) {
+            r += minutes + 'm'
+          }
+          if (seconds > 0 || minutes > 0 || hours > 0) {
+            r += seconds + 's'
+          }
+          if (r.length == 0) {
+            r += '0s'
+          }
+          return r
+      }
+
+      function generateSessionTable(sessions) {
+        var table  = ''
+        table += '<table style=\"border=4px solid\">'
+        table += '<tr><td>Process</td><td>Network</td><td>Duration</td><td>Local Addr</td><td>Remote Addr</td><td>Upload Bytes</td><td>Download Bytes</td><td>Extra</td><td>Outbound</td></tr>'
+        sessions.forEach((sess) => {
+          table += '<tr>'
+          app = ''
+          if (sess.processes && sess.processes.length > 0) {
+            var procs = []
+            for (i = sess.processes.length - 1; i >= 0; i--) {
+              if (i == 0) {
+                procs.push('<span class=\"highlight\">' + sess.processes[i] + '</span>')
+              } else {
+                procs.push(sess.processes[i])
+              }
+            }
+            app = procs.join(' ↣ ')
+          }
+          table += '<td>' + app + '</td>'
+          table += '<td>' + sess.network + '</td>'
+          table += '<td>' + toDuration(sess.sessionStart, sess.sessionEnd) + '</td>'
+          table += '<td>' + sess.localAddr + '</td>'
+          table += '<td>' + sess.remoteAddr + '</td>'
+          table += '<td>' + numberWithCommas(sess.uploadBytes) + '</td>'
+          table += '<td>' + numberWithCommas(sess.downloadBytes) + '</td>'
+          table += '<td>' + sess.extra + '</td>'
+          table += '<td>' + sess.outboundTag + '</td>'
+          table += '</tr>'
+        })
+        table += '</table>'
+        return table
+      }
+
+      function loadContent() {
+        var txt = ''
+        xmlhttp = new XMLHttpRequest()
+        xmlhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            statSessions = JSON.parse(this.responseText)
+            txt += '<p>Active sessions ' + statSessions.activeSessions.length + '</p>'
+            statSessions.activeSessions.sort((a, b) => {
+              // Sort by sessionStart time in decending order, older session first.
+              return (Date.parse(a.sessionStart) > Date.parse(b.sessionStart)) ? 1 : -1
+            })
+            txt += generateSessionTable(statSessions.activeSessions)
+            txt += '<br/><br/>'
+            txt += '<p>Recently completed sessions ' + statSessions.completedSessions.length + '</p>'
+            statSessions.completedSessions.sort((a, b) => {
+              // Sort by sessionEnd time in decending order, recent session first.
+              return (Date.parse(a.sessionEnd) < Date.parse(b.sessionEnd)) ? 1 : -1
+            })
+            txt += generateSessionTable(statSessions.completedSessions)
+            document.getElementById('content').innerHTML = txt
+          }
+        }
+        xmlhttp.open('GET', 'http://localhost:6001/stats/session/json', true)
+        xmlhttp.setRequestHeader('Content-type', 'application/json')
+        xmlhttp.send(null)
+      }
+
+      loadContent()
+      setInterval(loadContent, 2000)
+    </script>
+    <div id="content"></div>
+  </body>
+</html>

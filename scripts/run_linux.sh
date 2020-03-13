@@ -52,8 +52,7 @@ config_route &
 -vconfig $CONFIG_FILE \
 -proxyType v2ray \
 -relayICMP \
--loglevel info \
--stats
+-loglevel info
 
 # Recover the routing table after Mellow exits.
 recover_route

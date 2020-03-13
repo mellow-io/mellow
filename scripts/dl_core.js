@@ -3,7 +3,7 @@ const fs = require('fs')
 const util = require('util')
 const path = require('path')
 
-const version = 'v1.0.2'
+const version = 'v1.0.3'
 
 const links = {
   darwin: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-darwin-10.6-amd64', version),

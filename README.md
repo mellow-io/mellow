@@ -182,18 +182,14 @@ Windows 客户端在每次启动时都会弹框请求管理权限，如果不希
 
 DNS 的处理方面基本上和 [这篇文章](https://medium.com/@TachyonDevel/%E6%BC%AB%E8%B0%88%E5%90%84%E7%A7%8D%E9%BB%91%E7%A7%91%E6%8A%80%E5%BC%8F-dns-%E6%8A%80%E6%9C%AF%E5%9C%A8%E4%BB%A3%E7%90%86%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8-62c50e58cbd0) 中介绍的没什么出入，默认使用 Sniffing 来处理 DNS 染污，建议再配置一下 DNS 分流，就是 conf 配置中的 DNS Hijack + DNS Outbound（Endpoint） + DNS Server + DNS Rule。
 
-如果启用 DNS 分流（DNS Hijack），Sessions 中的 DNS 请求并不是实际发出的 DNS 请求，这是被 Hijack 前记录下的，Hijack 后实际所发的 DNS 请求暂时没有记录。
-
 ### 关于 NAT 类型
 使用 SOCKS 或 Shadowsocks 协议的话支持 Full Cone NAT，注意服务器也要是支持 Full Cone NAT 的，如果要代理游戏，服务端可以考虑用 shadowsocks-libev、go-shadowsocks2 等。
 
 ### 关于 JSON 配置的 Inbound
-JSON 配置文件中不需要有 Inbound，但也可以自行配置 Inbound 作其它用途，例如可以像其它非透明代理客户端一样，配置文件中写上 SOCKS/HTTP Inbound，再手动配置到系统或浏览器的代理设置中，那样浏览器的请求就会从 SOCKS/HTTP Inbound 过来，而不经过 TUN 接口。注意目前所有类型 Inbound 的 UDP 都不能用，因为我没见过哪个操作系统或浏览器真正地使用 SOCKS 的 UDP，所以也不会去修复它。
+JSON 配置文件中不需要有 Inbound，但也可以自行配置 Inbound 作其它用途，例如可以像其它非透明代理客户端一样，配置文件中写上 SOCKS/HTTP Inbound，再手动配置到系统或浏览器的代理设置中，那样浏览器的请求就会从 SOCKS/HTTP Inbound 过来，而不经过 TUN 接口，相当于 “系统代理” 模式（现在默认开启）。注意目前所有类型 Inbound 的 UDP 都不能用，因为我没见过哪个操作系统或浏览器真正地使用 SOCKS 的 UDP，所以也不会去修复它。
 
 ### 关于日志
 日志有两份，一份是 Mellow 的日志，一份是 V2Ray 的日志，V2Ray 日志如果输出到 stdout/stderr，那 V2Ray 的日志会被打印到 Mellow 的日志里。
-
-另打开 Sessions 页面可看到所有请求的详细信息，注意这个页面不会自动刷新。
 
 ### 关于 GUI
 目前没有任何计划做成 UI 配置的方式。
@@ -214,7 +210,7 @@ TUN 模式已经可以接管全部流量了，为什么还需要 “系统代理
 1. TUN 模式有性能瓶颈。
 2. “系统代理” 模式不会有太多 DNS 相关的问题，代理浏览器请求也快。
 
-开启 “系统代理” 的缺点大概就是 “请求记录” 页面看不到浏览器的请求，需要到日志里看。
+开启 “代理代理” 模式后，两种模式是并存的，可以走系统代理的请求优先走系统代理，剩下的走 TUN。
 
 ### 可以在 Linux 上以命令行方式运行吗？
 
