@@ -39,5 +39,8 @@
   "File name must end with .conf or .json": "File name must end with .conf or .json",
   "Rename Selected": "Rename Selected",
   "Rename Config": "Rename Config",
-  "New File Name:": "New File Name:"
+  "New File Name:": "New File Name:",
+  "Set UDP Timeout": "Set UDP Timeout",
+  "Set UDP session timeout": "Set UDP session timeout",
+  "Duration (e.g. 5m10s):": "Duration (e.g. 5m10s):"
 }

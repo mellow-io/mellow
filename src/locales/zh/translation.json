@@ -39,5 +39,8 @@
   "File name must end with .conf or .json": "文件名必需以 .conf 或 .json 结尾",
   "Rename Selected": "重命名选中配置",
   "Rename Config": "重命名配置",
-  "New File Name:": "新文件名："
+  "New File Name:": "新文件名：",
+  "Set UDP Timeout": "设置 UDP 超时",
+  "Set UDP session timeout": "设置 UDP 会话超时时间",
+  "Duration (e.g. 5m10s):": "时间 (例如 5m10s):"
 }

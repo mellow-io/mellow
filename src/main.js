@@ -122,6 +122,10 @@ const schema = {
   systemProxy: {
     type: 'boolean',
     default: true
+  },
+  udpTimeout: {
+    type: 'string',
+    default: '1m0s'
   }
 }
 const store = new Store({name: 'preference', schema: schema})
@@ -491,6 +495,7 @@ async function startCore(callback) {
         '-sendThrough', sendThrough,
         '-vconfig', runningConfig,
         '-proxyType', 'v2ray',
+        '-udpTimeout', store.get('udpTimeout'),
         '-relayICMP',
         '-loglevel', store.get('loglevel')
       ]
@@ -507,6 +512,7 @@ async function startCore(callback) {
         '-rpcPort', coreRpcPort.toString(),
         '-sendThrough', sendThrough,
         '-proxyType', 'v2ray',
+        '-udpTimeout', store.get('udpTimeout'),
         '-relayICMP',
         '-loglevel', store.get('loglevel'),
         '-vconfig', runningConfig
@@ -1274,6 +1280,27 @@ function buildTrayMenu() {
             },
             visible: isWin32
           },
+          {
+            label: i18n.t('Set UDP Timeout'),
+            type: 'normal',
+            click: (item) => {
+              prompt({
+                title: i18n.t('Set UDP session timeout'),
+                label: i18n.t('Duration (e.g. 5m10s):'),
+                value: store.get('udpTimeout'),
+                inputAttrs: {
+                    type: 'text'
+                }
+              })
+              .then((r) => {
+                if (r) {
+                  // remove all whitespaces before store
+                  store.set('udpTimeout', r.replace(/\s/g,''))
+                }
+              })
+            }
+          },
+          { type: 'separator' },
           {
             label: i18n.t('Domain Sniffing'),
             type: 'checkbox',

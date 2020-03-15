@@ -51,6 +51,7 @@ config_route &
 -sendThrough $ORIG_ST \
 -vconfig $CONFIG_FILE \
 -proxyType v2ray \
+-udpTimeout 1m0s \
 -relayICMP \
 -loglevel info
 
