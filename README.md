@@ -133,26 +133,26 @@ git clone https://github.com/mellow-io/mellow.git
 cd mellow
 
 # 安装依赖
-yarn
+npm i
 
 # 下载数据文件
-yarn dlgeo
+npm run dlgeo
 
 # 下载核心
-# 默认只下载本系统对应的核心文件，如果要为其它系统构建，加 `--all` 下载其它系统对应的文件
-yarn dlcore [--all]
+# 默认只下载本系统对应的核心文件，如果要为其它系统构建，加 `-- --all` 下载其它系统对应的文件
+npm run dlcore [-- --all]
 
 # 运行
-yarn start
+npm start
 
 # 构建 macOS 安装文件
-yarn distmac
+npm run distmac
 
 # 构建 Windows 安装文件
-yarn distwin
+npm run distwin
 
 # 构建 Linux 安装文件
-yarn distlinux
+npm run distlinux
 ```
 
 ## 一些说明

@@ -8,19 +8,16 @@ os:
 
 osx_image: xcode11.3
 
-cache:
-  yarn: true
-
 install:
-  - yarn
+  - npm i
 
 script:
-  - yarn dlgeo
-  - yarn dlcore --all
-  - yarn test
-  - yarn distmac
-  - USE_HARD_LINKS=false yarn distwin
-  - yarn distlinux
+  - npm run dlgeo
+  - npm run dlcore -- --all
+  - npm test
+  - npm run distmac
+  - USE_HARD_LINKS=false npm run distwin
+  - npm run distlinux
   - ls -la dist
 
 deploy:
