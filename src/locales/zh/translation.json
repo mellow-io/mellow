@@ -42,5 +42,6 @@
   "New File Name:": "新文件名：",
   "Set UDP Timeout": "设置 UDP 超时",
   "Set UDP session timeout": "设置 UDP 会话超时时间",
-  "Duration (e.g. 5m10s):": "时间 (例如 5m10s):"
+  "Duration (e.g. 5m10s):": "时间 (例如 5m10s):",
+  "Hide Dock Icon": "隐藏程序坞图标"
 }

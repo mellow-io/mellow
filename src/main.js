@@ -126,6 +126,10 @@ const schema = {
   udpTimeout: {
     type: 'string',
     default: '1m0s'
+  },
+  hideDockIcon: {
+    type: 'boolean',
+    default: false
   }
 }
 const store = new Store({name: 'preference', schema: schema})
@@ -1219,6 +1223,20 @@ function buildTrayMenu() {
         checked: store.get('checkUpdates')
       },
       {
+        label: i18n.t('Hide Dock Icon'),
+        type: 'checkbox',
+        click: (item) => {
+          if (item.checked) {
+            app.dock.hide()
+          } else {
+            app.dock.show()
+          }
+          store.set('hideDockIcon', item.checked)
+        },
+        checked: store.get('hideDockIcon'),
+        visible: isDarwin
+      },
+      {
         label: i18n.t('Log Level'),
         type: 'submenu',
         submenu: Menu.buildFromTemplate([
@@ -1413,7 +1431,9 @@ function monitorConfigs() {
 function init() {
   switch (process.platform) {
     case 'darwin':
-      app.dock.hide()
+      if (store.get('hideDockIcon')) {
+        app.dock.hide()
+      }
       break
     case 'linux':
     case 'win32':
@@ -1438,7 +1458,9 @@ app.on('ready', init)
 app.on('window-all-closed', function () {
   switch (process.platform) {
     case 'darwin':
-      app.dock.hide()
+      if (store.get('hideDockIcon')) {
+        app.dock.hide()
+      }
       break
     case 'linux':
     case 'win32':
@@ -1449,7 +1471,9 @@ app.on('window-all-closed', function () {
 app.on('browser-window-created', () => {
   switch (process.platform) {
     case 'darwin':
-      app.dock.show()
+      if (store.get('hideDockIcon')) {
+        app.dock.show()
+      }
       break
     case 'linux':
     case 'win32':
