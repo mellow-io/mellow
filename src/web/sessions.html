@@ -47,7 +47,7 @@
       function generateSessionTable(sessions) {
         var table  = ''
         table += '<table style=\"border=4px solid\">'
-        table += '<tr><td>Process</td><td>Network</td><td>Duration</td><td>Local Addr</td><td>Remote Addr</td><td>Upload Bytes</td><td>Download Bytes</td><td>Extra</td><td>Outbound</td></tr>'
+        table += '<tr><td>Process</td><td>Network</td><td>Duration</td><td>Local Addr</td><td>Remote Addr</td><td>Upload Bytes</td><td>Download Bytes</td><td>Response Time</td><td>Extra</td><td>Outbound</td></tr>'
         sessions.forEach((sess) => {
           table += '<tr>'
           app = ''
@@ -69,6 +69,7 @@
           table += '<td>' + sess.remoteAddr + '</td>'
           table += '<td>' + numberWithCommas(sess.uploadBytes) + '</td>'
           table += '<td>' + numberWithCommas(sess.downloadBytes) + '</td>'
+          table += '<td>' + sess.firstChunkDuration + '</td>'
           table += '<td>' + sess.extra + '</td>'
           table += '<td>' + sess.outboundTag + '</td>'
           table += '</tr>'
