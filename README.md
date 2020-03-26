@@ -1,4 +1,7 @@
 # Mellow
+
+[![Build Status](https://travis-ci.com/mellow-io/mellow.svg?branch=master)](https://travis-ci.com/mellow-io/mellow)
+
 Mellow 是一个基于规则的全局透明代理工具，可以运行在 Windows、macOS 和 Linux 上，也可以配置成路由器透明代理或代理网关，支持 SOCKS、HTTP、Shadowsocks、VMess 等多种代理协议。
 
 ## 下载安装
@@ -214,7 +217,7 @@ TUN 模式已经可以接管全部流量了，为什么还需要 “系统代理
 
 ### 可以在 Linux 上以命令行方式运行吗？
 
-可以的，只需要把 [这](https://github.com/mellow-io/mellow-core/releases/download/v1.0.2/core-linux-amd64) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](https://web.archive.org/web/20191227182412/https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/mellow-io/mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。
+可以的，只需要把 [这](https://github.com/mellow-io/mellow-core/releases/latest/download/core-linux-amd64) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](https://web.archive.org/web/20191227182412/https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/mellow-io/mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。
 
 ### 可以用作网关吗？
 
@@ -282,6 +285,10 @@ ssh -NL 6002:localhost:6001 root@192.168.1.1
 参考 https://github.com/mellow-io/mellow/issues/3 和 https://github.com/mellow-io/mellow/issues/52
 
 总的来说，需要处理好两点，一是把相应的代理软件流量用 PROCESS-NAME 规则排除掉，二是（有必要的话）对用到伪装域名的代理协议做额外处理。
+
+## Mellow 工作流程图
+
+![Mellow](https://raw.githubusercontent.com/mellow-io/mellow/master/.github/flow_zh.png)
 
 ## JSON 配置的扩展功能说明
 
