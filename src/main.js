@@ -450,11 +450,6 @@ async function startCore(callback) {
       return
     }
   } else if (selectedConfig.includes('.json')) {
-    if (store.get('systemProxy')) {
-      store.set('systemProxy', false)
-      reloadTray()
-      dialog.showMessageBox({ message: 'The System Proxy feature is not available for JSON config.' })
-    }
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
       parsedConfig = content
