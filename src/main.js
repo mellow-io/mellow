@@ -424,7 +424,7 @@ function configureSystemProxy(enabled) {
 async function startCore(callback) {
   coreInterrupt = false
 
-  var parsedConfig
+  var v2json
 
   const selectedConfig = store.get('selectedConfig')
   if (selectedConfig.length == 0) {
@@ -434,25 +434,16 @@ async function startCore(callback) {
   if (selectedConfig.includes('.conf')) {
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
-      var v2json = convert.constructJson(content)
-      const systemProxyOpts = {
-        enabled: store.get('systemProxy'),
-        httpPort: systemProxyHttpPort,
-        socksPort: systemProxySocksPort
-      }
-      if (systemProxyOpts.enabled) {
-        const inbounds = convert.constructSystemInbounds(systemProxyOpts)
-        v2json = convert.appendInbounds(v2json, inbounds)
-      }
-      parsedConfig = JSON.stringify(v2json, null, 2)
+      v2json = convert.constructJson(content)
     } catch(err) {
       dialog.showErrorBox('Error', 'Config error: ' +  err)
       return
     }
   } else if (selectedConfig.includes('.json')) {
     try {
-      const content = fs.readFileSync(selectedConfig, 'utf-8')
-      parsedConfig = content
+      var content = fs.readFileSync(selectedConfig, 'utf-8')
+      content = convert.removeJsonComments(content)
+      v2json = JSON.parse(content)
     } catch (err) {
       dialog.showErrorBox('Error', 'Config error: ' + err)
       return
@@ -461,6 +452,17 @@ async function startCore(callback) {
       dialog.showErrorBox('Config Error', 'Unknown config suffix')
       return
   }
+  if (store.get('systemProxy')) {
+    const systemProxyOpts = {
+      enabled: store.get('systemProxy'),
+      httpPort: systemProxyHttpPort,
+      socksPort: systemProxySocksPort
+    }
+    const inbounds = convert.constructSystemInbounds(systemProxyOpts)
+    v2json = convert.appendInbounds(v2json, inbounds)
+  }
+
+  const parsedConfig = JSON.stringify(v2json, null, 2)
 
   if (parsedConfig) {
     f = fs.openSync(runningConfig, 'w')

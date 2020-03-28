@@ -31,6 +31,20 @@ const removeLineComments = (s) => {
   return s.replace(/;[^*]*/g, '')
 }
 
+const removeJsonLineComments = (s) => {
+  s = s.replace(/#[^*]*/g, '')
+  s = s.replace(/\/\/[^*]*/g, '')
+  return s
+}
+
+const removeJsonComments = (s) => {
+  let lines = []
+  s.match(/[^\r\n]+/g).forEach((line) => {
+    lines.push(removeJsonLineComments(line))
+  })
+  return lines.join('\n')
+}
+
 const getLinesBySection = (conf, sect) => {
   var lines = []
   var currSect = ''
@@ -825,6 +839,10 @@ const constructSystemInbounds = (opts) => {
 const appendInbounds = (config, inbounds) => {
   if (inbounds.length > 0) {
     if (config.inbounds) {
+      const newPorts = inbounds.map(nib => nib.port)
+      config.inbounds = config.inbounds.filter((ib) => {
+        return !newPorts.includes(ib.port)
+      })
       config.inbounds.push(...inbounds)
     } else {
       config['inbounds'] = inbounds
@@ -877,7 +895,8 @@ module.exports = {
   constructOutbounds,
   constructJson,
   constructSystemInbounds,
-  appendInbounds
+  appendInbounds,
+  removeJsonComments
 }
 
 if (typeof require !== 'undefined' && require.main === module) {
