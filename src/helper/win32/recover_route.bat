@@ -1,5 +1,7 @@
 set ORIG_GW=%1
+for /f %%a in ('PowerShell -Command "& {Get-NetRoute -DestinationPrefix 0.0.0.0/0 -InterfaceMetric 25 | Select-Object -ExpandProperty InterfaceAlias}"') do (set WAN=%%a)
 
-route delete 0.0.0.0
-route add 0.0.0.0 mask 0.0.0.0 %ORIG_GW% metric 200
-ipconfig /flushdns
+PowerShell -Command "& {Remove-NetRoute -DestinationPrefix 0.0.0.0/0 -Confirm:$False}"
+PowerShell -Command "& {New-NetRoute -DestinationPrefix 0.0.0.0/0 -InterfaceAlias %WAN% -NextHop %ORIG_GW% -RouteMetric 0 -PolicyStore ActiveStore -Confirm:$False}"
+PowerShell -Command "& {Set-NetIPInterface -InterfaceAlias %WAN% -AddressFamily IPv6 -RouterDiscovery Enabled}"
+PowerShell -Command "& {Clear-DnsClientCache}"
