@@ -153,8 +153,8 @@ netsh interface set interface "%DEVICE_NAME%" admin=enabled
 ::   exit /b 1
 :: )
 
-echo Set TAP adapter metric to 2.
-netsh interface ip set interface %DEVICE_NAME% metric=2
+echo Set TAP adapter metric to 0.
+PowerShell -Command "& {Set-NetIPInterface -InterfaceAlias %DEVICE_NAME% -InterfaceMetric 0}"
 
 echo TAP network device added successfully.
 
