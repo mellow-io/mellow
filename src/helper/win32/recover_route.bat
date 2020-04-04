@@ -1,5 +1,5 @@
-set ORIG_GW=%1
+for /f %%a in ('PowerShell -Command "& {Get-NetAdapter -InterfaceDescription *TAP* | Select-Object -ExpandProperty InterfaceAlias}"') do (set TAP=%%a)
 
-route delete 0.0.0.0
-route add 0.0.0.0 mask 0.0.0.0 %ORIG_GW% metric 200
-ipconfig /flushdns
+PowerShell -Command "& {Remove-NetRoute -InterfaceAlias %TAP% -Confirm:$False}"
+PowerShell -Command "& {Set-NetIPInterface -InterfaceAlias * -AddressFamily IPv6 -RouterDiscovery Enabled}"
+PowerShell -Command "& {Clear-DnsClientCache}"
