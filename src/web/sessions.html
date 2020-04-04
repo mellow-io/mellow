@@ -27,7 +27,7 @@
           let secs = parseInt((endSecs - Date.parse(start)) / 1000)
           hours = Math.floor(secs / 60 / 60)
           minutes = Math.floor(secs / 60) % 60
-          seconds = Math.floor(secs - minutes * 60)
+          seconds = Math.floor(secs - hours * 60 * 60 - minutes * 60)
           var r = '' 
           if (hours > 0) {
             r += hours + 'h'
