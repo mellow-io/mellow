@@ -1,5 +1,5 @@
-for /f %%a in ('PowerShell -Command "& {Get-NetAdapter -InterfaceDescription *TAP* | Select-Object -ExpandProperty InterfaceAlias}"') do (set TAP=%%a)
+set DEVICE_NAME=%1
 
-PowerShell -Command "& {Remove-NetRoute -InterfaceAlias %TAP% -Confirm:$False}"
-PowerShell -Command "& {Set-NetIPInterface -InterfaceAlias * -AddressFamily IPv6 -RouterDiscovery Enabled}"
+PowerShell -Command "& {Remove-NetRoute -InterfaceAlias %DEVICE_NAME% -Confirm:$False}"
+PowerShell -Command "& {Set-NetIPInterface -AddressFamily IPv6 -RouterDiscovery Enabled}"
 PowerShell -Command "& {Clear-DnsClientCache}"
