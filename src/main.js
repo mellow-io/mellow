@@ -658,7 +658,7 @@ async function configRoute() {
         execSync(util.format('"%s" add default %s -ifscope %s', routeCmd, origGw, origGwScope))
         break
       case 'win32':
-        await sudoExec(util.format('"%s" %s %s', path.join(helperResourcePath, 'config_route.bat'), tunGw, origGw))
+        await sudoExec(util.format('"%s" %s %s', path.join(helperResourcePath, 'config_route.bat'), tunGw, tunName))
         break
       case 'linux':
         execSync(util.format('"%s" %s %s %s %s %s', path.join(helperResourcePath, 'config_route'), routeCmd, tunGw, origGw, origGwScope, sendThrough))
@@ -689,7 +689,7 @@ async function recoverRoute() {
           execSync(util.format('"%s" add default %s', routeCmd, origGw))
           break
         case 'win32':
-          await sudoExec(util.format('"%s" %s', path.join(helperResourcePath, 'recover_route.bat'), origGw))
+          await sudoExec(util.format('"%s" %s', path.join(helperResourcePath, 'recover_route.bat'), tunName))
           break
         case 'linux':
           execSync(util.format('"%s" %s %s', path.join(helperResourcePath, 'recover_route'), routeCmd, sendThrough, origGw))
