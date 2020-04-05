@@ -36,10 +36,21 @@ async function download(url, filePath) {
   })
 }
 
-if (process.argv.length > 2 && process.argv[2] == '--all') {
+if (process.argv.length > 2) {
+  if (process.argv[2] == '--all') {
       download(links.darwin, dsts.darwin)
       download(links.linux, dsts.linux)
       download(links.win32, dsts.win32)
+  }
+  if (process.argv[2] == '--darwin') {
+      download(links.darwin, dsts.darwin)
+  }
+  if (process.argv[2] == '--linux') {
+      download(links.linux, dsts.linux)
+  }
+  if (process.argv[2] == '--win' || process.argv[2] == '--win32') {
+      download(links.win32, dsts.win32)
+  }
 } else {
   switch (process.platform) {
     case 'darwin':
