@@ -22,17 +22,17 @@ while read line; do
             # may have multiple active devices, so echo it here
             # echo "$currentservice, $currentdevice, $currentmac"
 
-			if [ "$state" = "on" ]; then
-				networksetup -setwebproxy "$currentservice" "127.0.0.1" $http_port
-				networksetup -setsecurewebproxy "$currentservice" "127.0.0.1" $http_port
-				networksetup -setsocksfirewallproxy "$currentservice" "127.0.0.1" $socks_port
-			elif [ "$state" = "off" ]; then
-				networksetup -setwebproxystate "$currentservice" off
-				networksetup -setsecurewebproxystate "$currentservice" off
-				networksetup -setsocksfirewallproxystate "$currentservice" off
-			else
-				echo "invalid argument"
-			fi
+            if [ "$state" = "on" ]; then
+                networksetup -setwebproxy "$currentservice" "127.0.0.1" $http_port
+                networksetup -setsecurewebproxy "$currentservice" "127.0.0.1" $http_port
+                networksetup -setsocksfirewallproxy "$currentservice" "127.0.0.1" $socks_port
+            elif [ "$state" = "off" ]; then
+                networksetup -setwebproxystate "$currentservice" off
+                networksetup -setsecurewebproxystate "$currentservice" off
+                networksetup -setsocksfirewallproxystate "$currentservice" off
+            else
+                echo "invalid argument"
+            fi
         fi
     fi
 done <<< "$(echo "$services")"
