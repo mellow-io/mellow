@@ -17,7 +17,6 @@ setlocal
 
 set TAP_WINDOWS_PATH=%1
 set DEVICE_NAME=%2
-set DEVICE_HWID=tap0901
 
 :: Because we've seen multiple failures due to commands (netsh, etc.) not being
 :: found, append some common directories to the PATH.
@@ -58,7 +57,7 @@ if %errorlevel% neq 0 (
 type "%BEFORE_DEVICES%"
 
 echo Creating TAP network device...
-%TAP_WINDOWS_PATH%\tapinstall install %TAP_WINDOWS_PATH%\OemVista.inf %DEVICE_HWID%
+%TAP_WINDOWS_PATH%\tap-windows-latest-stable.exe /S
 if %errorlevel% neq 0 (
   echo Could not create TAP network device. >&2
   exit /b 1
@@ -119,7 +118,6 @@ if %errorlevel% neq 0 goto :loop
 ::
 :: So, continue even if this command fails - and always include its output.
 echo (Re-)enabling TAP network device...
-netsh interface set interface "%DEVICE_NAME%" admin=disabled
 netsh interface set interface "%DEVICE_NAME%" admin=enabled
 
 :: Give the device an IP address.
