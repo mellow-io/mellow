@@ -1,6 +1,8 @@
 set TUN_GW=%1
 set DEVICE_NAME=%2
 
-PowerShell -Command "& {New-NetRoute -DestinationPrefix 0.0.0.0/0 -InterfaceAlias %DEVICE_NAME% -NextHop %TUN_GW% -RouteMetric 0 -PolicyStore ActiveStore -Confirm:$False}"
-PowerShell -Command "& {Set-NetIPInterface -AddressFamily IPv6 -RouterDiscovery Disabled}"
-PowerShell -Command "& {Clear-DnsClientCache}"
+for /f "skip=3 tokens=4" %%a in ('netsh interface show interface') do (
+  netsh interface ipv6 set interface %%a routerdiscovery=disabled
+)
+netsh interface ip add route 0.0.0.0/0 %DEVICE_NAME% %TUN_GW% metric=0 store=active
+ipconfig /flushdns

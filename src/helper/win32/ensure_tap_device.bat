@@ -28,34 +28,11 @@ set DEVICE_HWID=tap0901
 set PATH=%PATH%;%SystemRoot%\system32;%SystemRoot%\system32\wbem;%SystemRoot%\system32\WindowsPowerShell/v1.0
 
 :: Check whether the device already exists.
-netsh interface show interface name=%DEVICE_NAME% >nul
-
+netsh interface show interface name=%DEVICE_NAME%
 if %errorlevel% equ 0 (
   echo TAP network device already exists.
   goto :configure
 )
-
-:: Add the device, recording the names of devices before and after to help
-:: us find the name of the new device.
-::
-:: Note:
-::  - While we could limit the search to devices having ServiceName=%DEVICE_HWID%,
-::    that will cause wmic to output just "no instances available" when there
-::    are no other TAP devices present, messing up the diff.
-::  - We do not use findstr, etc., to strip blank lines because those ancient tools
-::    typically don't understand/output non-Latin characters (wmic *does*, even on
-::    Windows 7).
-set BEFORE_DEVICES=%tmp%\outlineinstaller-tap-devices-before.txt
-set AFTER_DEVICES=%tmp%\outlineinstaller-tap-devices-after.txt
-
-echo Creating TAP network device...
-echo Storing current network device list...
-wmic nic where "netconnectionid is not null" get netconnectionid > "%BEFORE_DEVICES%"
-if %errorlevel% neq 0 (
-  echo Could not store network device list. >&2
-  exit /b 1
-)
-type "%BEFORE_DEVICES%"
 
 echo Creating TAP network device...
 %TAP_WINDOWS_PATH%\tapinstall install %TAP_WINDOWS_PATH%\OemVista.inf %DEVICE_HWID%
@@ -64,51 +41,31 @@ if %errorlevel% neq 0 (
   exit /b 1
 )
 
-echo Storing new network device list...
-wmic nic where "netconnectionid is not null" get netconnectionid > "%AFTER_DEVICES%"
-if %errorlevel% neq 0 (
-  echo Could not store network device list. >&2
-  exit /b 1
-)
-type "%AFTER_DEVICES%"
-
-:: Find the name of the new device and rename it.
-::
-:: Obviously, this command is a beast; roughly what it does, in this order, is:
-::  - perform a diff on the *trimmed* (in case wmic uses different column widths) before and after
-::    text files
-::  - remove leading/trailing space and blank lines with trim()
-::  - store the result in NEW_DEVICE
-::  - print NEW_DEVICE, for debugging (though non-Latin characters may appear as ?)
-::  - invoke netsh
-::
-:: Running all this in one go helps reduce the need to deal with temporary
-:: files and the character encoding headaches that follow.
-::
-:: Note that we pipe input from /dev/null to prevent Powershell hanging forever
-:: waiting on EOF.
+:: Find the name of the most recently installed TAP device in the registry and rename it.
 echo Searching for new TAP network device name...
-powershell "(compare-object (cat \"%BEFORE_DEVICES%\" | foreach-object {$_.trim()}) (cat \"%AFTER_DEVICES%\" | foreach-object {$_.trim()}) | format-wide -autosize | out-string).trim() | set-variable NEW_DEVICE; write-host \"New TAP device name: ${NEW_DEVICE}\"; netsh interface set interface name = \"${NEW_DEVICE}\" newname = \"%DEVICE_NAME%\"" <nul
+call %TAP_WINDOWS_PATH%\..\find_tap_device_name.bat TAP_NAME
 if %errorlevel% neq 0 (
-  echo Could not find or rename new TAP network device. >&2
+  echo Could not find TAP device name. >&2
   exit /b 1
 )
+echo Found TAP device name: "%TAP_NAME%"
 
 :: We've occasionally seen delays before netsh will "see" the new device, at least for
 :: purposes of configuring IP and DNS ("netsh interface show interface name=xxx" does not
 :: seem to be affected).
-echo Testing that the new TAP network device is visible to netsh...
-netsh interface ip show interfaces | find "%DEVICE_NAME%" >nul
-if %errorlevel% equ 0 goto :configure
+call :wait_for_device "%TAP_NAME%"
 
-:loop
-echo waiting...
-:: timeout doesn't like the environment created by nsExec::ExecToStack and exits with:
-:: "ERROR: Input redirection is not supported, exiting the process immediately."
-waitfor /t 10 thisisnotarealsignalname >nul 2>&1
-netsh interface ip show interfaces | find "%DEVICE_NAME%" >nul
-if %errorlevel% neq 0 goto :loop
+:: Attempt to rename the device even if waiting timed out.
+netsh interface set interface name= "%TAP_NAME%" newname= "%DEVICE_NAME%"
+if %errorlevel% neq 0 (
+  echo Could not rename TAP device. >&2
+  exit /b 1
+)
 
+:: Wait for the new name to propagate to netsh.
+call :wait_for_device "%DEVICE_NAME%"
+
+:: Attempt to configure the device even if waiting timed out.
 :configure
 
 :: Try to enable the device, in case it's somehow been disabled.
@@ -119,7 +76,6 @@ if %errorlevel% neq 0 goto :loop
 ::
 :: So, continue even if this command fails - and always include its output.
 echo (Re-)enabling TAP network device...
-netsh interface set interface "%DEVICE_NAME%" admin=disabled
 netsh interface set interface "%DEVICE_NAME%" admin=enabled
 
 :: Give the device an IP address.
@@ -154,11 +110,30 @@ netsh interface set interface "%DEVICE_NAME%" admin=enabled
 :: )
 
 echo Set all adapters metric to auto.
-PowerShell -Command "& {Set-NetIPInterface -AutomaticMetric Enabled}"
+for /f "skip=3 tokens=4" %%a in ('netsh interface show interface') do (
+  netsh interface ip set interface %%a metric=automatic
+  netsh interface ipv6 set interface %%a metric=automatic
+)
 
 echo Set TAP adapter metric to 0.
-PowerShell -Command "& {Set-NetIPInterface -InterfaceAlias %DEVICE_NAME% -InterfaceMetric 0}"
+netsh interface ip set interface %DEVICE_NAME% metric=0
+netsh interface ipv6 set interface %DEVICE_NAME% metric=0
 
 echo TAP network device added successfully.
-
 exit /b 0
+
+:: Waits up to a minute until a device is visible to netsh. Accepts the device name as a parameter.
+:: Exits with a non-zero code if the operation times out.
+:wait_for_device
+echo Testing that the network device "%~1" is visible to netsh...
+netsh interface ip show interfaces | find "%~1" >nul 2>&1
+if %errorlevel% equ 0 exit /b 0
+for /l %%N in (1, 1, 6) do (
+  echo Waiting... %%N
+  :: timeout doesn't like the environment created by nsExec::ExecToStack and exits with:
+  :: "ERROR: Input redirection is not supported, exiting the process immediately."
+  waitfor /t 10 thisisnotarealsignalname >nul 2>&1
+  netsh interface ip show interfaces | find "%~1" >nul 2>&1
+  if %errorlevel% equ 0 exit /b 0
+)
+exit /b 1
