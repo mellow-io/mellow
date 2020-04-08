@@ -73,6 +73,7 @@
           "filter": [
             "core.exe",
             "ensure_tap_device.bat",
+            "find_tap_device_name.bat",
             "config_route.bat",
             "recover_route.bat",
             "tap-windows6",

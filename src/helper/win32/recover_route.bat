@@ -1,5 +1,7 @@
 set DEVICE_NAME=%1
 
-PowerShell -Command "& {Remove-NetRoute -DestinationPrefix 0.0.0.0/0 -InterfaceAlias %DEVICE_NAME% -Confirm:$False}"
-PowerShell -Command "& {Set-NetIPInterface -AddressFamily IPv6 -RouterDiscovery Enabled}"
-PowerShell -Command "& {Clear-DnsClientCache}"
+for /f "skip=3 tokens=4" %%a in ('netsh interface show interface') do (
+  netsh interface ipv6 set interface %%a routerdiscovery=enabled
+)
+netsh interface ip delete route 0.0.0.0/0 %DEVICE_NAME%
+ipconfig /flushdns
