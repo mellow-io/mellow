@@ -54,7 +54,8 @@
             "install_helper",
             "md5sum",
             "route",
-            "configure_proxy"
+            "configure_proxy",
+            "setdnsservers"
           ]
         },
         "src/helper/geosite.dat",

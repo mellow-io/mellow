@@ -1,7 +1,6 @@
 const util = require('util')
 const log = require('electron-log')
 const base64url = require('base64url')
-const sysdns = require('dns')
 
 const sectionAlias = [
   ['RoutingRule', 'Rule'],
@@ -373,7 +372,7 @@ const constructDns = (dnsConf, server, rule, host, clientIp) => {
     const parts = line.trim().split(',')
     if (parts.length == 1) {
       if (process.platform == 'win32' && parts[0].trim() == 'localhost') {
-        const sysDnsServers = sysdns.getServers()
+        const sysDnsServers = require('dns').getServers()
         sysDnsServers.forEach((sysDns) => {
           servers.push({
             address: sysDns
