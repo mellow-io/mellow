@@ -17,7 +17,6 @@ setlocal
 
 set TAP_WINDOWS_PATH=%1
 set DEVICE_NAME=%2
-set DEVICE_HWID=tap0901
 
 :: Because we've seen multiple failures due to commands (netsh, etc.) not being
 :: found, append some common directories to the PATH.
