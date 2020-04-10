@@ -1381,10 +1381,15 @@ function buildTrayMenu() {
                 }
               })
               .then((r) => {
+                if (r === null) {
+                  // cancel
+                  return
+                }
                 if (r) {
                   let domains = r.replace(/\s/g,'').split(',')
                   store.set('fakeDnsExcludes', domains.join(','))
                 } else {
+                  // empty input
                   store.set('fakeDnsExcludes', '')
                 }
               })
