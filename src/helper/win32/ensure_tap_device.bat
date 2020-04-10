@@ -17,7 +17,6 @@ setlocal
 
 set TAP_WINDOWS_PATH=%1
 set DEVICE_NAME=%2
-set DEVICE_HWID=tap0901
 
 :: Because we've seen multiple failures due to commands (netsh, etc.) not being
 :: found, append some common directories to the PATH.
@@ -56,7 +55,10 @@ if %errorlevel% neq 0 (
 type "%BEFORE_DEVICES%"
 
 echo Creating TAP network device...
-%TAP_WINDOWS_PATH%\tapinstall install %TAP_WINDOWS_PATH%\OemVista.inf %DEVICE_HWID%
+for /f "tokens=4 delims=[.] " %%i in ('ver') do (
+  if %%i==10 %TAP_WINDOWS_PATH%\tap-windows-9.24.2-I601-Win10.exe /S
+  if %%i==6 %TAP_WINDOWS_PATH%\tap-windows-9.24.2-I601-Win7.exe /S
+)
 if %errorlevel% neq 0 (
   echo Could not create TAP network device. >&2
   exit /b 1
