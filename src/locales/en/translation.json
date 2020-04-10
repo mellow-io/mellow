@@ -43,5 +43,6 @@
   "Set UDP Timeout": "Set UDP Timeout",
   "Set UDP session timeout": "Set UDP session timeout",
   "Duration (e.g. 5m10s):": "Duration (e.g. 5m10s):",
-  "Hide Dock Icon": "Hide Dock Icon"
+  "Hide Dock Icon": "Hide Dock Icon",
+  "Fake DNS Excludes": "Fake DNS Excludes"
 }

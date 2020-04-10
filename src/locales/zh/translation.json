@@ -43,5 +43,6 @@
   "Set UDP Timeout": "设置 UDP 超时",
   "Set UDP session timeout": "设置 UDP 会话超时时间",
   "Duration (e.g. 5m10s):": "时间 (例如 5m10s):",
-  "Hide Dock Icon": "隐藏程序坞图标"
+  "Hide Dock Icon": "隐藏程序坞图标",
+  "Fake DNS Excludes": "Fake DNS 域名排除"
 }

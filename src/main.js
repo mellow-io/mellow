@@ -46,6 +46,18 @@ let origGwScope = null
 let sendThrough = null
 var pacServer = null
 let originalDnsServers = null
+let defaultFakeDnsExcludes = (() => {
+  switch (process.platform) {
+    case 'win32':
+      const domains = [
+        'dns.msftncsi.com',
+        'msftconnecttest.com'
+      ]
+      return domains.join(',')
+    default:
+      return ''
+  }
+})()
 
 var tunName
 switch (process.platform) {
@@ -131,7 +143,11 @@ const schema = {
   hideDockIcon: {
     type: 'boolean',
     default: false
-  }
+  },
+  fakeDnsExcludes: {
+    type: 'string',
+    default: defaultFakeDnsExcludes
+  },
 }
 const store = new Store({name: 'preference', schema: schema})
 
@@ -537,6 +553,7 @@ async function startCore(callback) {
 
   if (store.get('fakeDns')) {
     params.push('-fakeDns')
+    params.push(...['-fakeDnsExcludes', store.get('fakeDnsExcludes')])
   }
 
   let env = Object.create(process.env)
@@ -1347,6 +1364,28 @@ function buildTrayMenu() {
                 if (r) {
                   // remove all whitespaces before store
                   store.set('udpTimeout', r.replace(/\s/g,''))
+                }
+              })
+            }
+          },
+          {
+            label: i18n.t('Fake DNS Excludes'),
+            type: 'normal',
+            click: (item) => {
+              prompt({
+                title: i18n.t('Exclude domains'),
+                label: i18n.t('Seperated by comma:'),
+                value: store.get('fakeDnsExcludes'),
+                inputAttrs: {
+                    type: 'text'
+                }
+              })
+              .then((r) => {
+                if (r) {
+                  let domains = r.replace(/\s/g,'').split(',')
+                  store.set('fakeDnsExcludes', domains.join(','))
+                } else {
+                  store.set('fakeDnsExcludes', '')
                 }
               })
             }
