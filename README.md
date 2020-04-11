@@ -286,12 +286,10 @@ ssh -NL 6002:localhost:6001 root@192.168.1.1
 
 全局代理配置
 
-需要在Shadowsocks-Windows服务器地址填入IP而不是域名，否则会造成DNS解析loop。
-
 ```ini
 [Endpoint]
 SS, builtin, socks, address=127.0.0.1, port=1080
-Direct, builtin, freedom, domainStrategy=UseIP
+Direct, builtin, freedom
 Dns-Out, builtin, dns
 
 [RoutingRule]
