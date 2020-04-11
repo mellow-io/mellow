@@ -36,7 +36,7 @@ hijack = Dns-Out
 8.8.4.4
 ```
 
-### 简单配置
+### 分流配置
 
 绕过 cn 和 private。
 
@@ -281,6 +281,53 @@ ssh -NL 6002:localhost:6001 root@192.168.1.1
 ```
 
 ### 如何配合其它代理软件使用？
+
+以Shadowsocks-Windows为例，进程名为Shadowsocks.exe，端口为1080。
+
+全局代理配置，需要在Shadowsocks-Windows服务器地址填入IP而不是域名，否则会造成DNS解析loop。
+
+```ini
+[Endpoint]
+SS, builtin, socks, address=127.0.0.1, port=1080
+Direct, builtin, freedom, domainStrategy=UseIP
+Dns-Out, builtin, dns
+
+[RoutingRule]
+PROCESS-NAME, Shadowsocks.exe, Direct
+FINAL, SS
+
+[Dns]
+hijack = Dns-Out
+
+[DnsServer]
+8.8.8.8
+8.8.4.4
+```
+
+分流配置
+
+绕过 cn 和 private。
+
+```ini
+[Endpoint]
+SS, builtin, socks, address=127.0.0.1, port=1080
+Direct, builtin, freedom, domainStrategy=UseIP
+Dns-Out, builtin, dns
+
+[RoutingRule]
+PROCESS-NAME, Shadowsocks.exe, Direct
+DOMAIN-KEYWORD, geosite:cn, Direct
+GEOIP, cn, Direct
+GEOIP, private, Direct
+FINAL, SS
+
+[Dns]
+hijack = Dns-Out
+
+[DnsServer]
+localhost
+8.8.8.8
+```
 
 参考 https://github.com/mellow-io/mellow/issues/3 和 https://github.com/mellow-io/mellow/issues/52
 
