@@ -284,7 +284,9 @@ ssh -NL 6002:localhost:6001 root@192.168.1.1
 
 以Shadowsocks-Windows为例，进程名为Shadowsocks.exe，端口为1080。
 
-全局代理配置，需要在Shadowsocks-Windows服务器地址填入IP而不是域名，否则会造成DNS解析loop。
+全局代理配置
+
+需要在Shadowsocks-Windows服务器地址填入IP而不是域名，否则会造成DNS解析loop。
 
 ```ini
 [Endpoint]
