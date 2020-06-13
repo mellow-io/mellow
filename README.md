@@ -1,4 +1,4 @@
-# Mellow9
+# Mellow3
 
 [![Build Status](https://travis-ci.com/mellow-io/mellow.svg?branch=master)](https://travis-ci.com/mellow-io/mellow)
 
