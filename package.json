@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "axios": "^0.19.2",
-    "electron": "^8.0.1",
+    "electron": "^8.2.4",
     "electron-builder": "^22.3.2",
     "jest": "^24.9.0",
     "targz": "^1.0.1"
