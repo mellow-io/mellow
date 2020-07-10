@@ -3,12 +3,13 @@ const fs = require('fs')
 const util = require('util')
 const path = require('path')
 
-const version = 'v1.0.7'
+const version = 'v1.0.8'
+const linkPrefix = 'https://github.com/mellow-io/go-tun2socks/releases/download'
 
 const links = {
-  darwin: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-darwin-10.6-amd64', version),
-  linux: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-linux-amd64', version),
-  win32: util.format('https://github.com/mellow-io/mellow-core/releases/download/%s/core-windows-4.0-amd64.exe', version)
+  darwin: util.format('%s/%s/core-darwin-10.6-amd64', linkPrefix, version),
+  linux: util.format('%s/%s/core-linux-amd64', linkPrefix, version),
+  win32: util.format('%s/%s/core-windows-4.0-amd64.exe', linkPrefix, version)
 }
 const dsts = {
   darwin: path.join(__dirname, '../src/helper/darwin/core'),
