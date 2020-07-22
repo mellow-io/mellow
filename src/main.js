@@ -36,10 +36,6 @@ let coreNeedResume = false
 let tray = null
 let trayMenu = null
 let core = null
-let coreRpcPort = 2884
-let systemProxyHttpPort = 2885
-let systemProxySocksPort = 2886
-let pacServerPort = 2887
 let coreInterrupt = false
 let origGw = null
 let origGwScope = null
@@ -148,8 +144,18 @@ const schema = {
     type: 'string',
     default: defaultFakeDnsExcludes
   },
+  beginningPort: {
+    type: 'integer',
+    default: 2884
+  },
 }
 const store = new Store({name: 'preference', schema: schema})
+
+let beginningPort = store.get('beginningPort')
+let coreRpcPort = beginningPort + 0
+let systemProxyHttpPort = beginningPort + 1
+let systemProxySocksPort = beginningPort + 2
+let pacServerPort = beginningPort + 3
 
 function resetAutoLaunch() {
   if (store.get('autoLaunch')) {
@@ -1391,6 +1397,30 @@ function buildTrayMenu() {
                 } else {
                   // empty input
                   store.set('fakeDnsExcludes', '')
+                }
+              })
+            }
+          },
+          {
+            label: i18n.t('Beginning Port'),
+            type: 'normal',
+            click: (item) => {
+              prompt({
+                title: i18n.t('Beginning Port'),
+                label: i18n.t('A port number:'),
+                value: store.get('beginningPort'),
+                inputAttrs: {
+                    type: 'text'
+                }
+              })
+              .then((r) => {
+                if (r === null) {
+                  // cancel
+                  return
+                }
+                if (r) {
+                  let port = parseInt(r.replace(/\s/g,''))
+                  store.set('beginningPort', port)
                 }
               })
             }
