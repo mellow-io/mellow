@@ -2,6 +2,17 @@ const util = require('util')
 const log = require('electron-log')
 const base64url = require('base64url')
 
+const electron = require('electron')
+const { app } = electron
+const path = require('path')
+const fs = require('fs')
+let configFolder = path.join(app.getPath('userData'), 'config')
+
+const readConfig = (config) => {
+  const fullpath = path.join(configFolder, config)
+  return fs.readFileSync(fullpath, 'utf-8')
+}
+
 const sectionAlias = [
   ['RoutingRule', 'Rule'],
 ]
@@ -120,6 +131,113 @@ const isBalancerTag = (tag, balancers) => {
   return false
 }
 
+const constructRoutingRules = (rule, routing, overrideTarget=undefined) => {
+  var lastType = ''
+  var lastTarget = ''
+  var filters = []
+  var routingRules = []
+  rule.forEach((line) => {
+    const parts = line.trim().split(',')
+    if (parts.length < 2) {
+      return // next
+    }
+    const type = parts[0].trim()
+    // override target
+    const target = overrideTarget ? overrideTarget : parts[parts.length-1].trim()
+    if (filters.length > 0 && (nonListType(type) || !equalRuleType(type, lastType) || target !== lastTarget)) {
+      var r = {
+        type: 'field',
+      }
+      if (isBalancerTag(lastTarget, routing.balancers)) {
+        r['balancerTag'] = lastTarget
+      } else {
+        r['outboundTag'] = lastTarget
+      }
+      r[ruleName(lastType)] = ruleFilter(lastType, filters)
+      routingRules.push(r)
+      
+      lastType = ''
+      lastTarget = ''
+      filters = []
+    }
+
+    if (type === 'INCLUDE') {
+      if (parts.length <= 3) {
+        const content = readConfig(parts[1].trim())
+        const routingRule = getLinesBySection(content, 'RoutingRule')
+        const subRules = constructRoutingRules(routingRule, routing, parts.length === 3 ? parts[2].trim() : undefined)
+        routingRules = routingRules.concat(subRules)
+      } else {
+        return // next
+      }
+    }
+
+    if (type !== 'FINAL') {
+      if (parts.length != 3 && !overrideTarget) {
+        return // next
+      }
+    } else {
+      if (parts.length != 2) {
+        return // next
+      }
+    }
+
+    lastType = type
+    lastTarget = target
+    var filter = parts[1].trim()
+    switch (type) {
+      case 'DOMAIN-KEYWORD':
+        filters.push(filter)
+        break
+      case 'DOMAIN-SUFFIX':
+        filters.push(util.format('domain:%s', filter))
+        break
+      case 'DOMAIN':
+      case 'DOMAIN-FULL':
+        filters.push(util.format('full:%s', filter))
+        break
+      case 'IP-CIDR':
+        filters.push(filter)
+        break
+      case 'GEOIP':
+        filters.push(util.format('geoip:%s', filter))
+        break
+      case 'PORT':
+        filters.push(filter)
+        break
+      case 'PROCESS-NAME':
+        filters.push(filter)
+        break
+      case 'NETWORK':
+        filters.push(filter.split(':').join(','))
+        break
+      case 'FINAL':
+        if (routing.domainStrategy == 'IPIfNonMatch' || routing.domainStrategy == 'IPOnDemand') {
+          filters.push('0.0.0.0/0')
+          filters.push('::/0')
+          lastType = 'IP-CIDR'
+        } else {
+          filters.push('tcp,udp')
+          lastType = 'NETWORK'
+        }
+        break
+    }
+  })
+  if (filters.length > 0) {
+    var r = {
+      type: 'field',
+    }
+    if (isBalancerTag(lastTarget, routing.balancers)) {
+      r['balancerTag'] = lastTarget
+    } else {
+      r['outboundTag'] = lastTarget
+    }
+    r[ruleName(lastType)] = ruleFilter(lastType, filters)
+    routingRules.push(r)
+  }
+  return routingRules
+}
+
 const constructRouting = (routingConf, strategy, balancer, rule, dns) => {
   var routing = { balancers: [], rules: [] }
 
@@ -188,94 +306,8 @@ const constructRouting = (routingConf, strategy, balancer, rule, dns) => {
     routing.balancers.push(bnc)
   })
 
-  var lastType = ''
-  var lastTarget = ''
-  var filters = []
-  rule.forEach((line) => {
-    const parts = line.trim().split(',')
-    if (parts.length < 2) {
-      return // next
-    }
-    const type = parts[0].trim()
-    const target = parts[parts.length-1].trim()
-    if (filters.length > 0 && (nonListType(type) || !equalRuleType(type, lastType) || target !== lastTarget)) {
-      var r = {
-        type: 'field',
-      }
-      if (isBalancerTag(lastTarget, routing.balancers)) {
-        r['balancerTag'] = lastTarget
-      } else {
-        r['outboundTag'] = lastTarget
-      }
-      r[ruleName(lastType)] = ruleFilter(lastType, filters)
-      routing.rules.push(r)
-      lastType = ''
-      lastTarget = ''
-      filters = []
-    }
-    if (type !== 'FINAL') {
-      if (parts.length != 3) {
-        return // next
-      }
-    } else {
-      if (parts.length != 2) {
-        return // next
-      }
-    }
-    lastType = type
-    lastTarget = target
-    var filter = parts[1].trim()
-    switch (type) {
-      case 'DOMAIN-KEYWORD':
-        filters.push(filter)
-        break
-      case 'DOMAIN-SUFFIX':
-        filters.push(util.format('domain:%s', filter))
-        break
-      case 'DOMAIN':
-      case 'DOMAIN-FULL':
-        filters.push(util.format('full:%s', filter))
-        break
-      case 'IP-CIDR':
-        filters.push(filter)
-        break
-      case 'GEOIP':
-        filters.push(util.format('geoip:%s', filter))
-        break
-      case 'PORT':
-        filters.push(filter)
-        break
-      case 'PROCESS-NAME':
-        filters.push(filter)
-        break
-      case 'NETWORK':
-        filters.push(filter.split(':').join(','))
-        break
-      case 'FINAL':
-        if (routing.domainStrategy == 'IPIfNonMatch' || routing.domainStrategy == 'IPOnDemand') {
-          filters.push('0.0.0.0/0')
-          filters.push('::/0')
-          lastType = 'IP-CIDR'
-        } else {
-          filters.push('tcp,udp')
-          lastType = 'NETWORK'
-        }
-        break
-    }
-  })
-  if (filters.length > 0) {
-    var r = {
-      type: 'field',
-    }
-    if (isBalancerTag(lastTarget, routing.balancers)) {
-      r['balancerTag'] = lastTarget
-    } else {
-      r['outboundTag'] = lastTarget
-    }
-    r[ruleName(lastType)] = ruleFilter(lastType, filters)
-    routing.rules.push(r)
-  }
-
+  routing.rules = constructRoutingRules(rule, routing)
+  
   dns.forEach((line) => {
     const parts = line.trim().split('=')
     if (parts.length != 2) {
