@@ -6,10 +6,10 @@ const electron = require('electron')
 const { app } = electron
 const path = require('path')
 const fs = require('fs')
-let configFolder = path.join(app.getPath('userData'), 'config')
 
 const readConfig = (config) => {
-  const fullpath = path.join(configFolder, config)
+  let configFolder = path.join(app.getPath('userData'), 'config')
+  let fullpath = path.join(configFolder, config)
   return fs.readFileSync(fullpath, 'utf-8')
 }
 
