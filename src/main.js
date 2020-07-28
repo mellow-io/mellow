@@ -1127,6 +1127,8 @@ function buildTrayMenu() {
   if (configs.length > 0) {
     mainMenus.push({ type: 'separator' })
   }
+  const subConfigs = fs.readdirSync(configFolder).filter(x => (x.match(/^[^.].*(\.list)$/g)))
+
   mainMenus.push({
     label: i18n.t('Edit Selected'),
     type: 'normal',
@@ -1249,6 +1251,19 @@ function buildTrayMenu() {
         })
       }
     }])
+  }, {
+    label: i18n.t('Edit Include Config'),
+    type: 'submenu',
+    submenu: Menu.buildFromTemplate(subConfigs.map((config) => {
+      return {
+        label: config,
+        type: 'normal',
+        click: function() {
+          const fullpath = path.join(configFolder, config)
+          shell.openItem(fullpath)
+        }
+      }
+    }))
   })
   mainMenus.push({
     label: i18n.t('Config Folder'),

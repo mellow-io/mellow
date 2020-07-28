@@ -3,6 +3,7 @@
   "Disconnect": "断开连接",
   "Reconnect": "重新连接",
   "Edit Selected": "编辑选中配置",
+  "Edit Include Config": "编辑导入配置",
   "No selected config.": "没有选中配置。",
   "Create Config": "新建配置",
   "Create Conf Template": "新建 Conf 配置模板",
