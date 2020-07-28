@@ -459,7 +459,17 @@ async function startCore(callback) {
   if (selectedConfig.includes('.conf')) {
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
-      v2json = convert.constructJson(content)
+      let subConfig = {}
+      
+      routingRuleSubConfig = convert.readSubConfigBySection(content, 'RoutingRule')
+      if (routingRuleSubConfig.length != 0) {
+        subConfig['RoutingRule'] = {}
+        routingRuleSubConfig.forEach((filename) => {
+          subConfig['RoutingRule'][filename] = fs.readFileSync(path.join(configFolder, filename), 'utf-8')
+        })
+      }
+      
+      v2json = convert.constructJson(content, subConfig)
     } catch(err) {
       dialog.showErrorBox('Error', 'Config error: ' +  err)
       return
@@ -1117,6 +1127,8 @@ function buildTrayMenu() {
   if (configs.length > 0) {
     mainMenus.push({ type: 'separator' })
   }
+  const subConfigs = fs.readdirSync(configFolder).filter(x => (x.match(/^[^.].*(\.list)$/g)))
+
   mainMenus.push({
     label: i18n.t('Edit Selected'),
     type: 'normal',
@@ -1239,6 +1251,19 @@ function buildTrayMenu() {
         })
       }
     }])
+  }, {
+    label: i18n.t('Edit Include Config'),
+    type: 'submenu',
+    submenu: Menu.buildFromTemplate(subConfigs.map((config) => {
+      return {
+        label: config,
+        type: 'normal',
+        click: function() {
+          const fullpath = path.join(configFolder, config)
+          shell.openItem(fullpath)
+        }
+      }
+    }))
   })
   mainMenus.push({
     label: i18n.t('Config Folder'),
