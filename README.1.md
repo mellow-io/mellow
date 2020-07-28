@@ -217,7 +217,7 @@ TUN 模式已经可以接管全部流量了，为什么还需要 “系统代理
 
 ### 可以在 Linux 上以命令行方式运行吗？
 
-可以的，只需要把 [这](https://github.com/mellow-io/mellow-core/releases/latest/download/core-linux-amd64) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](https://web.archive.org/web/20191227182412/https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/mellow-io/mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。
+可以的，只需要把 [这](https://github.com/mellow-io/mellow-core/releases/latest/download/core-linux-amd64) [四](https://github.com/v2ray/domain-list-community/releases/latest/download/dlc.dat) [个](https://web.archive.org/web/20191227182412/https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz) [文件](https://github.com/mellow-io/mellow/blob/master/scripts/run_linux.sh) 下载到同一个目录，把 `dlc.dat` 改名为 `geosite.dat`，把 `GeoLite2-Country.tar.gz` 解压后改名为 `geo.mmdb`，再自行创建一个叫 `cfg.json` 的 V2Ray 配置文件，然后运行 `run_linux.sh` 脚本（需要 root 权限）。注意，如果用 ssh 连的 Linux，你可能需要打开一个持续 `ping` 目标 Linux 的窗口，不然在运行后 ssh 有可能失去连接或连接不上。
 
 ### 可以用作网关吗？
 

@@ -5,7 +5,47 @@ if [ `id -u` -ne 0 ]; then
   exit 1
 fi
 
+
+EXE_FILE=core
 CONFIG_FILE=cfg.json
+
+if [ ! -f "$EXE_FILE" ]; then
+	echo "Executable file not found!"
+	exit 1
+fi
+
+if [ ! -f "$CONFIG_FILE" ]; then
+	echo "Config file not found!"
+	exit 1
+fi
+
+if [ ! -x "$EXE_FILE" ]; then
+	echo "Run 'chmod +x $EXE_FILE' first!"
+	exit 1
+fi
+
+GEOSITE_FILE=geosite.dat
+GEOMMDB_FILE=geo.mmdb
+
+function ask_data_file {
+	while true; do
+		read -p "$1 not found! Feel free to skip if you are sure your config does not depend on this file. Do you wish to proceed this program?" yn
+		case $yn in
+			[Yy]* ) break;;
+			[Nn]* ) exit 1;;
+			* ) echo "Please answer yes or no.";;
+		esac
+	done
+}
+
+if [ ! -f "$GEOSITE_FILE" ]; then
+	ask_data_file $GEOSITE_FILE
+fi
+
+if [ ! -f "$GEOMMDB_FILE" ]; then
+	ask_data_file $GEOMMDB_FILE
+fi
+
 TUN_GW=10.255.0.1
 TUN_ADDR=10.255.0.2
 TUN_MASK=255.255.255.0
@@ -43,8 +83,11 @@ recover_route() {
 # Configure the routing table in the background.
 config_route &
 
+
+EXE_FULL_PATH=`realpath $EXE_FILE`
+
 # Run Mellow in blocking mode.
-./core \
+$EXE_FULL_PATH \
 -tunAddr $TUN_ADDR \
 -tunGw $TUN_GW \
 -tunMask $TUN_MASK \
