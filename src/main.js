@@ -459,7 +459,17 @@ async function startCore(callback) {
   if (selectedConfig.includes('.conf')) {
     try {
       const content = fs.readFileSync(selectedConfig, 'utf-8')
-      v2json = convert.constructJson(content)
+      let subConfig = {}
+      
+      routingRuleSubConfig = convert.readSubConfigBySection(content, 'RoutingRule')
+      if (routingRuleSubConfig.length != 0) {
+        subConfig['RoutingRule'] = {}
+        routingRuleSubConfig.forEach((filename) => {
+          subConfig['RoutingRule'][filename] = fs.readFileSync(path.join(configFolder, filename), 'utf-8')
+        })
+      }
+      
+      v2json = convert.constructJson(content, subConfig)
     } catch(err) {
       dialog.showErrorBox('Error', 'Config error: ' +  err)
       return

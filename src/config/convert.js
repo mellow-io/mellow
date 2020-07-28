@@ -2,15 +2,26 @@ const util = require('util')
 const log = require('electron-log')
 const base64url = require('base64url')
 
-const electron = require('electron')
-const { app } = electron
-const path = require('path')
-const fs = require('fs')
 
-const readConfig = (config) => {
-  let configFolder = path.join(app.getPath('userData'), 'config')
-  let fullpath = path.join(configFolder, config)
-  return fs.readFileSync(fullpath, 'utf-8')
+const readSubConfigBySection = (config, sect) => {
+  var subConfigNames = []
+  var currSect = ''
+  config.match(/[^\r\n]+/g).forEach((line) => {
+    line = removeLineComments(line)
+    const s = getSection(line)
+    if (s.length != 0) {
+      currSect = s
+      return // next
+    }
+    if (equalSection(currSect, sect)) {
+      line = line.trim()
+      if (line.includes('INCLUDE')) {
+        const parts = line.split(',')
+        subConfigNames.push(parts[1].trim())
+      }
+    }
+  })
+  return subConfigNames
 }
 
 const sectionAlias = [
@@ -131,7 +142,7 @@ const isBalancerTag = (tag, balancers) => {
   return false
 }
 
-const constructRoutingRules = (rule, routing, overrideTarget=undefined) => {
+const constructRoutingRules = (rule, routing, subconfig, overrideTarget=undefined) => {
   var lastType = ''
   var lastTarget = ''
   var filters = []
@@ -163,9 +174,9 @@ const constructRoutingRules = (rule, routing, overrideTarget=undefined) => {
 
     if (type === 'INCLUDE') {
       if (parts.length <= 3) {
-        const content = readConfig(parts[1].trim())
+        const content = subconfig['RoutingRule'][parts[1].trim()]
         const routingRule = getLinesBySection(content, 'RoutingRule')
-        const subRules = constructRoutingRules(routingRule, routing, parts.length === 3 ? parts[2].trim() : undefined)
+        const subRules = constructRoutingRules(routingRule, routing, subconfig, parts.length === 3 ? parts[2].trim() : undefined)
         routingRules = routingRules.concat(subRules)
       } else {
         return // next
@@ -238,7 +249,7 @@ const constructRoutingRules = (rule, routing, overrideTarget=undefined) => {
   return routingRules
 }
 
-const constructRouting = (routingConf, strategy, balancer, rule, dns) => {
+const constructRouting = (routingConf, strategy, balancer, rule, dns, subconfig) => {
   var routing = { balancers: [], rules: [] }
 
   routingConf.forEach((line) => {
@@ -306,7 +317,7 @@ const constructRouting = (routingConf, strategy, balancer, rule, dns) => {
     routing.balancers.push(bnc)
   })
 
-  routing.rules = constructRoutingRules(rule, routing)
+  routing.rules = constructRoutingRules(rule, routing, subconfig)
   
   dns.forEach((line) => {
     const parts = line.trim().split('=')
@@ -882,13 +893,13 @@ const appendInbounds = (config, inbounds) => {
   return config
 }
 
-const constructJson = (conf) => {
+const constructJson = (conf, subConf) => {
   const routingDomainStrategy = getLinesBySection(conf, 'RoutingDomainStrategy')
   const routingConf = getLinesBySection(conf, 'Routing')
   const balancerRule = getLinesBySection(conf, 'EndpointGroup')
   const routingRule = getLinesBySection(conf, 'RoutingRule')
   const dnsConf = getLinesBySection(conf, 'Dns')
-  const routing = constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf)
+  const routing = constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf, subConf)
 
   const dnsServer = getLinesBySection(conf, 'DnsServer')
   const dnsRule = getLinesBySection(conf, 'DnsRule')
@@ -927,7 +938,8 @@ module.exports = {
   constructJson,
   constructSystemInbounds,
   appendInbounds,
-  removeJsonComments
+  removeJsonComments,
+  readSubConfigBySection
 }
 
 if (typeof require !== 'undefined' && require.main === module) {

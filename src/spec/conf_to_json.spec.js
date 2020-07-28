@@ -60,6 +60,9 @@ DOMAIN-SUFFIX, c.google.com, MyGroup
 DOMAIN-KEYWORD, geosite:cn, Direct
 DOMAIN-KEYWORD, bilibili, Direct
 PROCESS-NAME, git, Proxy-2
+INCLUDE, subconf1.list
+INCLUDE, subconf2.list, MyGroup
+INCLUDE, subconf3.list, MyGroup
 NETWORK, udp:tcp, Direct
 FINAL, Direct
 
@@ -88,6 +91,32 @@ localhost = 127.0.0.1
 [Log]
 loglevel = warning
 `
+
+const subconf1 = `
+[RoutingRule]
+PROCESS-NAME, storedownloadd, Direct
+PROCESS-NAME, com.apple.WeatherKitService, Direct
+`
+
+const subconf2 = `
+[RoutingRule]
+PROCESS-NAME, trustd
+DOMAIN-SUFFIX, apple.com
+`
+
+const subconf3 = `
+[RoutingRule]
+DOMAIN-SUFFIX, icloud.com, Direct
+DOMAIN-SUFFIX, me.com, Direct
+`
+
+const subConf = {
+  'RoutingRule': {
+      'subconf1.list': subconf1,
+      'subconf2.list': subconf2,
+      'subconf3.list': subconf3,
+    }
+  }
 
 const json = `
 {
@@ -435,6 +464,36 @@ const json = `
       },
       {
         "type": "field",
+        "app": [
+          "storedownloadd",
+          "com.apple.WeatherKitService"
+        ],
+        "outboundTag": "Direct"
+      },
+      {
+        "type": "field",
+        "app": [
+          "trustd"
+        ],
+        "balancerTag": "MyGroup"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:apple.com"
+        ],
+        "balancerTag": "MyGroup"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:icloud.com",
+          "domain:me.com"
+        ],
+        "balancerTag": "MyGroup"
+      },
+      {
+        "type": "field",
         "network": "udp,tcp",
         "outboundTag": "Direct"
       },
@@ -488,7 +547,7 @@ describe('Convert conf config to JSON', () => {
     const balancerRule = convert.getLinesBySection(conf, 'EndpointGroup')
     const routingRule = convert.getLinesBySection(conf, 'RoutingRule')
     const dnsConf = convert.getLinesBySection(conf, 'Dns')
-    const routing = convert.constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf)
+    const routing = convert.constructRouting(routingConf, routingDomainStrategy, balancerRule, routingRule, dnsConf, subConf)
     expect(routing).toEqual(JSON.parse(json).routing)
   })
 
@@ -515,7 +574,7 @@ describe('Convert conf config to JSON', () => {
   })
 
   test('Construct the whole JSON object', () => {
-    const v2json = convert.constructJson(conf)
+    const v2json = convert.constructJson(conf, subConf)
     expect(v2json).toEqual(JSON.parse(json))
   })
 })
