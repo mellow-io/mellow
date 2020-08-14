@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 EXE_FILE=core
 CONFIG_FILE=cfg.json
