@@ -55,7 +55,7 @@ if %errorlevel% neq 0 (
 type "%BEFORE_DEVICES%"
 
 echo Creating TAP network device...
-for /f "tokens=4 delims=. " %%i in ('ver') do (
+for /f "skip=1 delims=." %%i in ('wmic os get version') do (
   if %%i==10 %TAP_WINDOWS_PATH%\tap-windows-9.24.2-I601-Win10.exe /S
   if %%i==6 %TAP_WINDOWS_PATH%\tap-windows-9.24.2-I601-Win7.exe /S
 )
