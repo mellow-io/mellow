@@ -9,7 +9,7 @@ cp "$RES_PATH/geosite.dat" "$INSTALL_PATH"
 cp "$RES_PATH/geo.mmdb" "$INSTALL_PATH"
 cp "$RES_PATH/core" "$INSTALL_PATH"
 cp "$RES_PATH/md5sum" "$INSTALL_PATH"
-cp "$RES_PATH/route" "$INSTALL_PATH"
+cp /sbin/route "$INSTALL_PATH"
 
 chown root "$INSTALL_PATH/core"
 chown root "$INSTALL_PATH/md5sum"
