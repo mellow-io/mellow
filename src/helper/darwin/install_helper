@@ -9,7 +9,17 @@ cp "$RES_PATH/geosite.dat" "$INSTALL_PATH"
 cp "$RES_PATH/geo.mmdb" "$INSTALL_PATH"
 cp "$RES_PATH/core" "$INSTALL_PATH"
 cp "$RES_PATH/md5sum" "$INSTALL_PATH"
-cp /sbin/route "$INSTALL_PATH"
+
+# /sbin/route from macOS 13 will crash if argv[0] is not /sbin/route
+# As a workaround, the following wrapper is created to set argv[0]
+clang -o "$INSTALL_PATH/route" -x c - <<'EOF'
+#include <unistd.h>
+int main(int argc, char ** const argv) {
+  argv[0] = "/sbin/route";
+	execv(argv[0], argv);
+}
+EOF
+
 
 chown root "$INSTALL_PATH/core"
 chown root "$INSTALL_PATH/md5sum"
