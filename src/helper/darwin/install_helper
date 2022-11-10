@@ -16,7 +16,7 @@ clang -o "$INSTALL_PATH/route" -x c - <<'EOF'
 #include <unistd.h>
 int main(int argc, char ** const argv) {
   argv[0] = "/sbin/route";
-	execv(argv[0], argv);
+  execv(argv[0], argv);
 }
 EOF
 
