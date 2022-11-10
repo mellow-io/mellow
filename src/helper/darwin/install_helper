@@ -14,7 +14,7 @@ cp "$RES_PATH/md5sum" "$INSTALL_PATH"
 # As a workaround, the following wrapper is created to set argv[0]
 clang -o "$INSTALL_PATH/route" -x c - <<'EOF'
 #include <unistd.h>
-int main(int argc, char ** const argv) {
+int main(int argc, char *argv[]) {
   argv[0] = "/sbin/route";
   execv(argv[0], argv);
 }
